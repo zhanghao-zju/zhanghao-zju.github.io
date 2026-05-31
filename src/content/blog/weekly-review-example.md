@@ -1,5 +1,5 @@
 ---
-title: 每周学习总结示例
+title: 学习总结示例
 slug: weekly-review-example
 date: 2026-05-30
 category: weekly-review

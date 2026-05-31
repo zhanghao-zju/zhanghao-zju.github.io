@@ -6,26 +6,30 @@ const sortedPosts = posts.sort(
   (a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf(),
 );
 
+const formatDate = (date) => {
+  const value = new Date(date);
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const categories = [
   {
     key: 'tech-notes',
     title: '技术学习笔记',
-    description: '记录新学到的概念、方法、工具和代码实践。',
   },
   {
     key: 'weekly-review',
-    title: '每周学习总结',
-    description: '按周回顾学习进度、材料、问题和下一步计划。',
+    title: '学习总结',
   },
   {
     key: 'lab-log',
     title: '项目实验记录',
-    description: '记录复现 paper、调实验、踩坑和得到的启发。',
   },
   {
     key: 'life-notes',
     title: '生活碎碎念',
-    description: '更随意的生活、阅读、观察和想法片段。',
   },
 ];
 
@@ -39,21 +43,6 @@ const postsByCategory = categories.map((category) => ({
   <section class="hero">
     <p class="eyebrow">Writing</p>
     <h1>写作目录</h1>
-    <p class="lead">把学习、总结、实验和生活记录放在同一个目录里，按主题分组，方便以后持续积累和检索。</p>
-  </section>
-
-  <section class="section">
-    <h2>分类入口</h2>
-    <div class="category-grid">
-      {
-        categories.map((category) => (
-          <a class="category-card" href={`#${category.key}`}>
-            <strong>{category.title}</strong>
-            <span>{category.description}</span>
-          </a>
-        ))
-      }
-    </div>
   </section>
 
   {
@@ -63,7 +52,7 @@ const postsByCategory = categories.map((category) => ({
         <ul class="writing-list">
           {category.posts.map((post) => (
             <li class="writing-row">
-              <time datetime={post.frontmatter.date}>{post.frontmatter.date}</time>
+              <time datetime={formatDate(post.frontmatter.date)}>{formatDate(post.frontmatter.date)}</time>
               <div>
                 <h3>
                   <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
