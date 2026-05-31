@@ -23,14 +23,16 @@ const isActive = (href) => {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
   </head>
   <body>
     <header class="site-header">
-      <a class="site-title" href="/">Your Name</a>
+      <a class="site-title" href="/">
+        <img class="site-avatar" src="/avatar.jpg" alt="" />
+        <span>张浩</span>
+      </a>
       <nav aria-label="主导航">
         {
           navItems.map((item) => (
@@ -44,9 +46,6 @@ const isActive = (href) => {
     <main>
       <slot />
     </main>
-    <footer class="site-footer">
-      <p>© {new Date().getFullYear()} Your Name. Built with Astro.</p>
-    </footer>
   </body>
 </html>
 
@@ -89,8 +88,7 @@ const isActive = (href) => {
   }
 
   .site-header,
-  main,
-  .site-footer {
+  main {
     width: min(100% - 32px, 960px);
     margin: 0 auto;
   }
@@ -105,9 +103,25 @@ const isActive = (href) => {
   }
 
   .site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     color: var(--text);
     font-weight: 700;
     font-size: 18px;
+  }
+
+  .site-title:hover {
+    text-decoration: none;
+  }
+
+  .site-avatar {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    object-fit: cover;
   }
 
   nav {
@@ -184,6 +198,10 @@ const isActive = (href) => {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
+  }
+
+  .grid > :only-child {
+    grid-column: 1 / -1;
   }
 
   .category-grid {
@@ -312,13 +330,6 @@ const isActive = (href) => {
 
   .article :is(h2, h3) {
     margin-top: 32px;
-  }
-
-  .site-footer {
-    padding: 24px 0 40px;
-    border-top: 1px solid var(--line);
-    color: var(--muted);
-    font-size: 14px;
   }
 
   @media (max-width: 700px) {
