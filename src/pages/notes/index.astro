@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const notes = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true })).filter(
+  (post) => post.frontmatter.category === 'life-notes',
+);
+const sortedNotes = notes.sort(
+  (a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf(),
+);
+---
+
+<BaseLayout title="Notes | Your Name">
+  <section class="hero">
+    <p class="eyebrow">Notes</p>
+    <h1>生活碎碎念</h1>
+    <p class="lead">这是写作目录里的一个分类，用来放生活、阅读、观察和想法片段。</p>
+  </section>
+
+  <section class="section">
+    <ul class="list">
+      {
+        sortedNotes.map((note) => (
+          <li class="item">
+            <h3>
+              <a href={`/blog/${note.frontmatter.slug}/`}>{note.frontmatter.title}</a>
+            </h3>
+            <p class="meta">{note.frontmatter.date}</p>
+            <p>{note.frontmatter.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

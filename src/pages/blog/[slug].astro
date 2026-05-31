@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true }));
+
+  return posts.map((post) => ({
+    params: { slug: post.frontmatter.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const Content = post.default;
+
+const categoryLabels = {
+  'tech-notes': '技术学习笔记',
+  'weekly-review': '每周学习总结',
+  'lab-log': '项目实验记录',
+  'life-notes': '生活碎碎念',
+};
+---
+
+<BaseLayout title={`${post.frontmatter.title} | Blog`}>
+  <article class="article">
+    <p class="eyebrow">Writing</p>
+    <p class="category">{categoryLabels[post.frontmatter.category]}</p>
+    <h1>{post.frontmatter.title}</h1>
+    <p class="meta">{post.frontmatter.date}</p>
+    <Content />
+  </article>
+</BaseLayout>

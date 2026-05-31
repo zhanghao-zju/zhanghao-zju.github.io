@@ -1,17 +1,53 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Your Name | 个人主页">
+  <section class="hero">
+    <p class="eyebrow">研究生 / Research Student</p>
+    <h1>Your Name</h1>
+    <p class="lead">
+      这里写一段简短介绍：你目前的学校、研究方向、关注的问题，以及你希望别人通过这个主页快速了解什么。
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>研究兴趣</h2>
+    <ul class="tag-list">
+      <li>机器学习</li>
+      <li>自然语言处理</li>
+      <li>论文阅读</li>
+      <li>科研工具</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>代表文章</h2>
+    <div class="grid">
+      <article class="item">
+        <h3>论文标题示例</h3>
+        <p>作者列表，会议或期刊，年份。这里可以写一句贡献简介。</p>
+        <a href="/publications/">查看文章列表</a>
+      </article>
+      <article class="item">
+        <h3>项目或预印本示例</h3>
+        <p>可以放 arXiv、代码仓库、项目主页等链接。</p>
+        <a href="/publications/">查看详情</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>最近更新</h2>
+    <div class="grid">
+      <article class="item">
+        <h3><a href="/blog/">写作目录</a></h3>
+        <p>技术学习笔记、每周学习总结、项目实验记录和生活碎碎念都放在这里。</p>
+      </article>
+      <article class="item">
+        <h3><a href="/publications/">发表文章</a></h3>
+        <p>整理论文、预印本、项目报告和其他学术产出。</p>
+      </article>
+    </div>
+  </section>
+</BaseLayout>
