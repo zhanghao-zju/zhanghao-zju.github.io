@@ -54,7 +54,7 @@ description: 一句话摘要。
 
 ```text
 tech-notes      技术学习笔记
-weekly-review   每周学习总结
+weekly-review   学习总结
 lab-log         项目实验记录
 life-notes      生活碎碎念
 ```
