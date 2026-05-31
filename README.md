@@ -71,4 +71,41 @@ life-notes      生活碎碎念
 
 ```sh
 npm run build
+# 接着推送到github
+git status
+git add .
+git commit -m "Add new article"
+git push personal-homepage main
+# 然后等待 GitHub Actions 自动部署
+# 这里看部署状态：https://github.com/zhanghao-zju/zhanghao-zju.github.io/actions
+
+
+```
+
+## 图片放在哪里
+
+推荐你手动放在：
+
+```
+public/images/
+```
+
+比如：
+
+```
+public/images/transformer-architecture.png
+```
+
+然后在 Markdown 里这样引用：
+
+```
+![Transformer 架构图](/images/transformer-architecture.png)
+```
+
+注意路径前面有 /，因为 public/ 里的文件会作为网站根目录公开。
+
+不要写成本地绝对路径，比如：
+
+```
+/Users/zhanghao/Desktop/a.png
 ```
