@@ -317,6 +317,10 @@ const isActive = (href) => {
     max-width: 760px;
   }
 
+  .article h1 {
+    font-size: clamp(28px, 4vw, 42px);
+  }
+
   .article .category {
     display: inline-flex;
     width: fit-content;
@@ -330,6 +334,21 @@ const isActive = (href) => {
 
   .article :is(h2, h3) {
     margin-top: 32px;
+  }
+
+  .article img {
+    display: block;
+    width: min(100%, 680px);
+    max-height: 520px;
+    height: auto;
+    margin: 24px auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .article figure {
+    margin: 24px 0;
   }
 
   @media (max-width: 700px) {
