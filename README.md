@@ -70,6 +70,12 @@ life-notes      生活碎碎念
 ## 构建检查
 
 ```sh
+# 写完文章后，先在本地预览
+cd /Users/zhanghao/code/personal-homepage
+npm run dev
+# 然后浏览器打开：http://127.0.0.1:4321/blog/你的slug/
+
+# 确定没问题再执行：
 npm run build
 # 接着推送到github
 git status

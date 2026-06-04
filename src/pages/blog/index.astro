@@ -1,42 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CATEGORIES, PAGE_SIZE, formatDate, sortPostsByDateDesc } from '../../lib/writing.js';
 
 const posts = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true }));
-const sortedPosts = posts.sort(
-  (a, b) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf(),
-);
+const sortedPosts = sortPostsByDateDesc(posts);
 
-const formatDate = (date) => {
-  const value = new Date(date);
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+const postsByCategory = CATEGORIES.map((category) => {
+  const categoryPosts = sortedPosts.filter((post) => post.frontmatter.category === category.key);
 
-const categories = [
-  {
-    key: 'tech-notes',
-    title: '技术学习笔记',
-  },
-  {
-    key: 'weekly-review',
-    title: '学习总结',
-  },
-  {
-    key: 'lab-log',
-    title: '项目实验记录',
-  },
-  {
-    key: 'life-notes',
-    title: '生活碎碎念',
-  },
-];
-
-const postsByCategory = categories.map((category) => ({
-  ...category,
-  posts: sortedPosts.filter((post) => post.frontmatter.category === category.key),
-}));
+  return {
+    ...category,
+    posts: categoryPosts.slice(0, PAGE_SIZE),
+    totalPosts: categoryPosts.length,
+    totalPages: Math.ceil(categoryPosts.length / PAGE_SIZE),
+  };
+});
 ---
 
 <BaseLayout title="写作目录 | 张浩">
@@ -48,20 +26,42 @@ const postsByCategory = categories.map((category) => ({
   {
     postsByCategory.map((category) => (
       <section class="section writing-section" id={category.key}>
-        <h2>{category.title}</h2>
-        <ul class="writing-list">
-          {category.posts.map((post) => (
-            <li class="writing-row">
-              <time datetime={formatDate(post.frontmatter.date)}>{formatDate(post.frontmatter.date)}</time>
-              <div>
-                <h3>
-                  <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
-                </h3>
-                <p>{post.frontmatter.description}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div class="writing-heading">
+          <h2>{category.title}</h2>
+          <span>{category.totalPosts} 篇</span>
+        </div>
+        {
+          category.posts.length > 0 ? (
+            <>
+              <ul class="writing-list">
+                {category.posts.map((post) => (
+                  <li class="writing-row">
+                    <time datetime={formatDate(post.frontmatter.date)}>
+                      {formatDate(post.frontmatter.date)}
+                    </time>
+                    <div>
+                      <h3>
+                        <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
+                      </h3>
+                      <p>{post.frontmatter.description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <nav class="pagination" aria-label={`${category.title}分页`}>
+                <span class="disabled">上一页</span>
+                <span>第 1 / {category.totalPages} 页</span>
+                {category.totalPages > 1 ? (
+                  <a href={`/blog/${category.key}/2/`}>下一页</a>
+                ) : (
+                  <span class="disabled">下一页</span>
+                )}
+              </nav>
+            </>
+          ) : (
+            <p class="empty-state">暂无文章。</p>
+          )
+        }
       </section>
     ))
   }

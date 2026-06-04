@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import {
+  CATEGORIES,
+  PAGE_SIZE,
+  formatDate,
+  sortPostsByDateDesc,
+} from '../../../lib/writing.js';
+
+export async function getStaticPaths() {
+  const allPosts = Object.values(import.meta.glob('../../../content/blog/*.md', { eager: true }));
+
+  return CATEGORIES.flatMap((category) => {
+    const posts = sortPostsByDateDesc(
+      allPosts.filter((post) => post.frontmatter.category === category.key),
+    );
+    const totalPages = Math.ceil(posts.length / PAGE_SIZE);
+
+    return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => {
+      const page = index + 2;
+
+      return {
+        params: {
+          category: category.key,
+          page: String(page),
+        },
+        props: {
+          category,
+          page,
+          posts: posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+          totalPages,
+        },
+      };
+    });
+  });
+}
+
+const { category, page, posts, totalPages } = Astro.props;
+const previousHref = page === 2 ? `/blog/#${category.key}` : `/blog/${category.key}/${page - 1}/`;
+const nextHref = page < totalPages ? `/blog/${category.key}/${page + 1}/` : null;
+---
+
+<BaseLayout title={`${category.title} 第 ${page} 页 | 张浩`}>
+  <section class="hero">
+    <p class="eyebrow">Writing</p>
+    <h1>{category.title}</h1>
+  </section>
+
+  <section class="section writing-section">
+    <ul class="writing-list">
+      {
+        posts.map((post) => (
+          <li class="writing-row">
+            <time datetime={formatDate(post.frontmatter.date)}>
+              {formatDate(post.frontmatter.date)}
+            </time>
+            <div>
+              <h3>
+                <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
+              </h3>
+              <p>{post.frontmatter.description}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <nav class="pagination" aria-label={`${category.title}分页`}>
+      <a href={previousHref}>上一页</a>
+      <span>第 {page} / {totalPages} 页</span>
+      {nextHref ? <a href={nextHref}>下一页</a> : <span class="disabled">下一页</span>}
+    </nav>
+  </section>
+</BaseLayout>

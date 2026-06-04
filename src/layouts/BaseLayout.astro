@@ -253,6 +253,24 @@ const isActive = (href) => {
     scroll-margin-top: 24px;
   }
 
+  .writing-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .writing-heading h2 {
+    margin-bottom: 0;
+  }
+
+  .writing-heading span,
+  .empty-state {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
   .writing-list {
     display: grid;
     gap: 10px;
@@ -286,6 +304,32 @@ const isActive = (href) => {
   .writing-row p {
     margin-bottom: 0;
     color: var(--muted);
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .pagination a,
+  .pagination .disabled {
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .pagination a {
+    background: var(--surface);
+  }
+
+  .pagination .disabled {
+    color: var(--muted);
+    opacity: 0.55;
   }
 
   .tag-list {

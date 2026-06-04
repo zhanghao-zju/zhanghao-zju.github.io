@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categoryLabels, formatDate } from '../../lib/writing.js';
 
 export async function getStaticPaths() {
   const posts = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true }));
@@ -13,20 +14,6 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const Content = post.default;
 
-const categoryLabels = {
-  'tech-notes': '技术学习笔记',
-  'weekly-review': '学习总结',
-  'lab-log': '项目实验记录',
-  'life-notes': '生活碎碎念',
-};
-
-const formatDate = (date) => {
-  const value = new Date(date);
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 ---
 
 <BaseLayout title={`${post.frontmatter.title} | Blog`}>
