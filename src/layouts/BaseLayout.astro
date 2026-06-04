@@ -101,16 +101,19 @@ const isActive = (href) => {
 
   .site-header {
     position: sticky;
-    top: 0;
+    top: 12px;
     z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 18px 0;
-    border-bottom: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.86);
-    backdrop-filter: blur(18px);
+    padding: 14px 18px;
+    border: 1px solid rgba(226, 232, 240, 0.78);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.07);
+    backdrop-filter: blur(20px) saturate(1.18);
+    -webkit-backdrop-filter: blur(20px) saturate(1.18);
   }
 
   .site-title {
@@ -235,6 +238,17 @@ const isActive = (href) => {
     color: white;
   }
 
+  .button.secondary {
+    border-color: rgba(63, 95, 143, 0.22);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .button.secondary:hover {
+    border-color: rgba(63, 95, 143, 0.34);
+    background: rgba(63, 95, 143, 0.14);
+  }
+
   .hero-visual {
     position: relative;
     min-height: 260px;
@@ -244,6 +258,17 @@ const isActive = (href) => {
     background:
       linear-gradient(135deg, rgba(63, 95, 143, 0.14), transparent 42%),
       linear-gradient(180deg, #ffffff, #f8fbff);
+  }
+
+  .hero-image {
+    display: block;
+    width: 100%;
+    min-height: 260px;
+    max-height: 320px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--surface-soft);
   }
 
   .hero-visual::before {

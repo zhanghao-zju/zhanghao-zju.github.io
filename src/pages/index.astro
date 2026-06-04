@@ -5,6 +5,13 @@ import { formatDate, sortPostsByDateDesc } from '../lib/writing.js';
 const postModules = import.meta.glob('../content/blog/*.md', { eager: true });
 const posts = sortPostsByDateDesc(Object.values(postModules));
 const latestPosts = posts.slice(0, 5);
+const featuredSlugs = [];
+const featuredPosts = featuredSlugs.length
+  ? featuredSlugs
+      .map((slug) => posts.find((post) => post.frontmatter.slug === slug))
+      .filter(Boolean)
+  : latestPosts.slice(0, 3);
+const heroImage = '';
 ---
 
 <BaseLayout title="张浩 | 个人主页">
@@ -14,10 +21,16 @@ const latestPosts = posts.slice(0, 5);
       <p class="lead">记录技术学习、项目实践和长期思考，把零散的输入沉淀成可复用的内容。</p>
       <div class="hero-actions">
         <a class="button primary" href="/blog/">阅读文章</a>
-        <a class="button" href="/projects/">查看项目</a>
+        <a class="button secondary" href="/projects/">查看项目</a>
       </div>
     </div>
-    <div class="hero-visual" aria-hidden="true"></div>
+    {
+      heroImage ? (
+        <img class="hero-image" src={heroImage} alt="" />
+      ) : (
+        <div class="hero-visual" aria-hidden="true"></div>
+      )
+    }
   </section>
 
   <section class="section">
@@ -27,7 +40,7 @@ const latestPosts = posts.slice(0, 5);
     </div>
     <div class="card-grid">
       {
-        latestPosts.slice(0, 3).map((post) => (
+        featuredPosts.map((post) => (
           <article class="card">
             <p class="eyebrow">{formatDate(post.frontmatter.date)}</p>
             <h3><a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a></h3>

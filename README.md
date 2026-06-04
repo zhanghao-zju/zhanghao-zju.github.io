@@ -28,7 +28,216 @@ src/layouts/BaseLayout.astro           全站布局和样式
 public/avatar.jpg                      导航头像
 public/favicon.jpg                     浏览器标签页图标
 public/images/                         文章图片
+public/images/home/                    首页配图
 ```
+
+## 首页怎么维护
+
+首页文件在：
+
+```text
+src/pages/index.astro
+```
+
+### 代表文章是怎么选出来的
+
+首页的“代表文章”优先读取 `featuredSlugs`：
+
+```js
+const featuredSlugs = [];
+```
+
+如果 `featuredSlugs` 是空数组，首页会自动展示最新的 3 篇文章。
+
+如果你以后想固定指定几篇代表文章，就把文章的 `slug` 写进去：
+
+```js
+const featuredSlugs = ['qnn1', 'weekly-review01', 'tech-note-example'];
+```
+
+这些 `slug` 来自每篇 Markdown 文章开头的 frontmatter：
+
+```md
+---
+title: 如何理解 QNN 参数化量子电路
+slug: qnn1
+date: 2026-06-02
+category: tech-notes
+---
+```
+
+指定后，首页会按 `featuredSlugs` 里的顺序展示，而不是按日期自动排序。
+
+### 最新文章模块怎么更新
+
+首页的“最新文章”模块会自动读取：
+
+```text
+src/content/blog/
+```
+
+然后按照文章 frontmatter 里的 `date` 从新到旧排序，展示最新 5 篇。
+
+也就是说，你只需要在 Markdown 里正确写日期：
+
+```md
+date: 2026-06-04
+```
+
+不需要手动修改“最新文章”列表。
+
+### 首页图怎么更换
+
+首页右侧目前是 CSS 生成的简洁配图。如果以后想换成自己的图片，建议把图片放在：
+
+```text
+public/images/home/
+```
+
+例如：
+
+```text
+public/images/home/hero.png
+```
+
+然后打开：
+
+```text
+src/pages/index.astro
+```
+
+把：
+
+```js
+const heroImage = '';
+```
+
+改成：
+
+```js
+const heroImage = '/images/home/hero.png';
+```
+
+注意路径从 `/images/...` 开始，不要写 `/public/images/...`。
+
+## 项目页面怎么维护
+
+项目页文件在：
+
+```text
+src/pages/projects.astro
+```
+
+每一个项目卡片对应 `projects` 数组里的一个对象：
+
+```js
+{
+  title: '项目中文名',
+  summary: '一句话简介。',
+  tags: ['标签1', '标签2'],
+  links: [
+    { label: '项目实验记录', href: '/blog/你的文章slug/' },
+    { label: 'GitHub', href: 'https://github.com/zhanghao-zju/你的项目仓库' },
+  ],
+}
+```
+
+以后做完一个项目，推荐流程是：
+
+1. 先在 `src/content/blog/` 写一篇 `category: lab-log` 的项目实验记录文章。
+2. 给这篇文章设置清楚的 `slug`，例如 `mnist-qnn-lab`。
+3. 在 `src/pages/projects.astro` 的 `projects` 数组里复制一个项目对象。
+4. `title` 写项目中文名。
+5. `summary` 写一句话简介。
+6. 第一个链接写项目实验记录文章地址：`/blog/mnist-qnn-lab/`。
+7. 第二个链接写这个项目的 GitHub 仓库地址。
+
+目前项目卡片不会自动从项目实验记录文章生成。原因是项目页需要“项目中文名、简介、GitHub 仓库、相关文章链接”这些结构化信息，而普通 Markdown 文章现在只保存了 `title / slug / date / category`。
+
+如果以后想自动生成，可以给项目实验记录文章增加额外 frontmatter，例如：
+
+```md
+---
+title: QNN 实现 MNIST01 分类学习
+slug: mnist-qnn-lab
+date: 2026-06-04
+category: lab-log
+project:
+  name: QNN 手写数字分类
+  summary: 使用参数化量子电路完成 MNIST 0/1 分类实验。
+  github: https://github.com/zhanghao-zju/xxx
+---
+```
+
+然后再改 `src/pages/projects.astro`，让它读取这些带 `project` 字段的文章自动生成卡片。现在为了简单稳定，项目卡片先采用手动维护。
+
+## 文章页面和分页逻辑
+
+文章目录页文件在：
+
+```text
+src/pages/blog/index.astro
+```
+
+分类分页页文件在：
+
+```text
+src/pages/blog/[category]/[page].astro
+```
+
+分页配置在：
+
+```text
+src/lib/writing.js
+```
+
+当前每个专栏每页显示 5 篇：
+
+```js
+export const PAGE_SIZE = 5;
+```
+
+分页逻辑不需要你手动建文件夹，也不需要你手动创建第 1 页、第 2 页。你只需要持续往：
+
+```text
+src/content/blog/
+```
+
+添加 Markdown 文章。Astro 构建时会自动按分类和页码生成对应页面。
+
+如果某个专栏有 13 篇文章，且 `PAGE_SIZE = 5`，就会自动分成 3 页。
+
+## 关于页面怎么维护
+
+关于页文件在：
+
+```text
+src/pages/about.astro
+```
+
+“个人信息”“项目名称”“获奖与证书”这些卡片现在都是写在这个前端页面里的静态内容。它们不是 Markdown 自动生成的。
+
+个人信息卡片在这一段附近修改：
+
+```astro
+<h2>个人信息</h2>
+<ul class="info-list">
+  <li><strong>姓名</strong><span>张浩</span></li>
+  <li><strong>教育经历</strong><span>2021-2025 南京理工大学</span></li>
+  <li><strong>当前状态</strong><span>2026-至今 浙江大学</span></li>
+</ul>
+```
+
+获奖与证书卡片在这一段附近修改：
+
+```astro
+<h2>获奖与证书</h2>
+<ul class="info-list">
+  <li><strong>奖项名称</strong><span>获奖时间或说明</span></li>
+</ul>
+```
+
+如果以后获奖很多，可以继续复制 `<li>...</li>` 新增一行。
 
 ## 写文章放哪里
 
