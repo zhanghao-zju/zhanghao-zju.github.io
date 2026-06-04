@@ -3,7 +3,6 @@ title: 项目实验记录示例
 slug: lab-log-example
 date: 2026-05-29
 category: lab-log
-description: 记录复现 paper 或做项目实验时的环境、步骤、坑和启发。
 ---
 
 项目实验记录建议写得更结构化，方便以后回头查。

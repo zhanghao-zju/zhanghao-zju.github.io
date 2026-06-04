@@ -1,10 +1,8 @@
 ---
-
 title: 如何理解 QNN 参数化量子电路
 slug: qnn1
 date: 2026-06-02
 category: tech-notes
-description: 通俗理解 Quantum Neural Network
 
 ---
 

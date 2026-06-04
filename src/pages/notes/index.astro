@@ -27,7 +27,6 @@ const sortedNotes = notes.sort(
               <a href={`/blog/${note.frontmatter.slug}/`}>{note.frontmatter.title}</a>
             </h3>
             <p class="meta">{formatDate(note.frontmatter.date)}</p>
-            <p>{note.frontmatter.description}</p>
           </li>
         ))
       }

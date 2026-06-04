@@ -1,33 +1,59 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatDate, sortPostsByDateDesc } from '../lib/writing.js';
+
+const postModules = import.meta.glob('../content/blog/*.md', { eager: true });
+const posts = sortPostsByDateDesc(Object.values(postModules));
+const latestPosts = posts.slice(0, 5);
 ---
 
 <BaseLayout title="张浩 | 个人主页">
-  <section class="hero">
-    <p class="lead">一定要赶上和超过世界先进水平。</p>
+  <section class="hero-panel">
+    <div>
+      <h1>一定要赶上和超过世界先进水平。</h1>
+      <p class="lead">记录技术学习、项目实践和长期思考，把零散的输入沉淀成可复用的内容。</p>
+      <div class="hero-actions">
+        <a class="button primary" href="/blog/">阅读文章</a>
+        <a class="button" href="/projects/">查看项目</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true"></div>
   </section>
 
   <section class="section">
-    <h2>代表文章</h2>
-    <div class="grid">
-      <article class="item">
-        <h3>暂未发表敬请期待</h3>
-        <a href="/publications/">查看文章列表</a>
-      </article>
+    <div class="section-header">
+      <h2>代表文章</h2>
+      <a href="/blog/">查看全部 →</a>
+    </div>
+    <div class="card-grid">
+      {
+        latestPosts.slice(0, 3).map((post) => (
+          <article class="card">
+            <p class="eyebrow">{formatDate(post.frontmatter.date)}</p>
+            <h3><a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a></h3>
+          </article>
+        ))
+      }
     </div>
   </section>
 
   <section class="section">
-    <h2>最近更新</h2>
-    <div class="grid">
-      <article class="item">
-        <h3><a href="/blog/">写作目录</a></h3>
-        <p>技术学习笔记、学习总结、项目实验记录和生活碎碎念都放在这里。</p>
-      </article>
-      <article class="item">
-        <h3><a href="/publications/">发表文章</a></h3>
-        <p>整理论文、预印本、项目报告和其他学术产出。</p>
-      </article>
+    <div class="section-header">
+      <h2>最新文章</h2>
+      <a href="/blog/">进入写作目录 →</a>
     </div>
+    <ul class="writing-list">
+      {
+        latestPosts.map((post) => (
+          <li class="writing-row">
+            <time datetime={formatDate(post.frontmatter.date)}>{formatDate(post.frontmatter.date)}</time>
+            <div>
+              <h3><a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a></h3>
+            </div>
+            <span class="writing-arrow">›</span>
+          </li>
+        ))
+      }
+    </ul>
   </section>
 </BaseLayout>

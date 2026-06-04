@@ -3,7 +3,6 @@ title: 学习总结示例
 slug: weekly-review-example
 date: 2026-05-30
 category: weekly-review
-description: 回顾这一周学了什么、卡在哪里、下周准备继续做什么。
 ---
 
 这一类文章可以固定成一个轻量模板：

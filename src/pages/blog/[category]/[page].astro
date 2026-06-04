@@ -58,8 +58,8 @@ const nextHref = page < totalPages ? `/blog/${category.key}/${page + 1}/` : null
               <h3>
                 <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
               </h3>
-              <p>{post.frontmatter.description}</p>
             </div>
+            <span class="writing-arrow">›</span>
           </li>
         ))
       }

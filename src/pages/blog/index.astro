@@ -1,8 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { CATEGORIES, PAGE_SIZE, formatDate, sortPostsByDateDesc } from '../../lib/writing.js';
+import {
+  CATEGORIES,
+  PAGE_SIZE,
+  formatDate,
+  sortPostsByDateDesc,
+} from '../../lib/writing.js';
 
-const posts = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true }));
+const postModules = import.meta.glob('../../content/blog/*.md', { eager: true });
+const posts = Object.values(postModules);
 const sortedPosts = sortPostsByDateDesc(posts);
 
 const postsByCategory = CATEGORIES.map((category) => {
@@ -19,9 +25,12 @@ const postsByCategory = CATEGORIES.map((category) => {
 
 <BaseLayout title="写作目录 | 张浩">
   <section class="hero">
-    <p class="eyebrow">Writing</p>
     <h1>写作目录</h1>
   </section>
+
+  <div class="writing-tabs" aria-label="文章专栏">
+    {CATEGORIES.map((category) => <a href={`#${category.key}`}>{category.title}</a>)}
+  </div>
 
   {
     postsByCategory.map((category) => (
@@ -43,8 +52,8 @@ const postsByCategory = CATEGORIES.map((category) => {
                       <h3>
                         <a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a>
                       </h3>
-                      <p>{post.frontmatter.description}</p>
                     </div>
+                    <span class="writing-arrow">›</span>
                   </li>
                 ))}
               </ul>

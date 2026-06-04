@@ -1,13 +1,15 @@
 ---
+import 'katex/dist/katex.min.css';
+
 const {
   title = '个人主页',
-  description = '研究生个人主页、博客与随笔。',
+  description = '个人技术博客与成长记录。',
 } = Astro.props;
 
 const navItems = [
   { href: '/', label: '首页' },
-  { href: '/publications/', label: '发表' },
-  { href: '/blog/', label: '写作' },
+  { href: '/projects/', label: '项目' },
+  { href: '/blog/', label: '文章' },
   { href: '/about/', label: '关于' },
 ];
 
@@ -52,17 +54,20 @@ const isActive = (href) => {
 <style is:global>
   :root {
     color-scheme: light;
-    --bg: #f7f4ed;
-    --surface: #fffdf8;
-    --text: #202124;
-    --muted: #64635f;
-    --line: #ded8cb;
-    --accent: #1f6f78;
-    --accent-strong: #174f56;
-    --tag: #e7f0ed;
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-soft: #fafbfc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --line-strong: #cbd5e1;
+    --accent: #3f5f8f;
+    --accent-strong: #263f63;
+    --accent-soft: #eef3f8;
+    --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
     font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      sans-serif;
+      Inter, "Source Sans 3", "Noto Sans SC", ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   * {
@@ -72,9 +77,11 @@ const isActive = (href) => {
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 8% 0%, rgba(63, 95, 143, 0.08), transparent 28%),
+      linear-gradient(180deg, #ffffff 0%, var(--bg) 280px);
     color: var(--text);
-    line-height: 1.65;
+    line-height: 1.72;
   }
 
   a {
@@ -84,22 +91,26 @@ const isActive = (href) => {
 
   a:hover {
     color: var(--accent-strong);
-    text-decoration: underline;
   }
 
   .site-header,
   main {
-    width: min(100% - 32px, 960px);
+    width: min(100% - 40px, 1180px);
     margin: 0 auto;
   }
 
   .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 28px 0 20px;
+    padding: 18px 0;
     border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(18px);
   }
 
   .site-title {
@@ -107,150 +118,261 @@ const isActive = (href) => {
     align-items: center;
     gap: 10px;
     color: var(--text);
-    font-weight: 700;
-    font-size: 18px;
-  }
-
-  .site-title:hover {
-    text-decoration: none;
+    font-weight: 760;
+    letter-spacing: 0;
   }
 
   .site-avatar {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border: 1px solid var(--line);
     border-radius: 50%;
-    background: var(--surface);
     object-fit: cover;
   }
 
   nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 8px;
     font-size: 15px;
   }
 
   nav a {
+    padding: 6px 12px;
+    border-radius: 8px;
     color: var(--muted);
   }
 
-  nav a.active {
-    color: var(--text);
-    font-weight: 650;
+  nav a.active,
+  nav a:hover {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
   }
 
   main {
-    padding: 56px 0;
-  }
-
-  .hero {
-    display: grid;
-    gap: 16px;
-    margin-bottom: 44px;
-  }
-
-  .eyebrow {
-    margin: 0;
-    color: var(--accent);
-    font-size: 14px;
-    font-weight: 700;
+    padding: 42px 0 76px;
   }
 
   h1,
   h2,
   h3 {
-    line-height: 1.2;
+    line-height: 1.22;
+    letter-spacing: 0;
   }
 
   h1 {
     margin: 0;
-    font-size: clamp(34px, 6vw, 62px);
-    max-width: 780px;
+    font-size: clamp(34px, 5vw, 58px);
   }
 
   h2 {
-    margin: 0 0 18px;
-    font-size: 25px;
+    margin: 0;
+    font-size: 24px;
   }
 
   h3 {
-    margin: 0 0 6px;
-    font-size: 19px;
+    margin: 0;
+    font-size: 18px;
   }
 
   p {
-    margin: 0 0 14px;
+    margin: 0;
+  }
+
+  .eyebrow {
+    margin: 0;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 760;
   }
 
   .lead {
     max-width: 720px;
     color: var(--muted);
-    font-size: 19px;
+    font-size: 18px;
+  }
+
+  .hero {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 34px;
+  }
+
+  .hero-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    align-items: center;
+    gap: 32px;
+    padding: 42px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 680;
+  }
+
+  .button.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  .hero-visual {
+    position: relative;
+    min-height: 260px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background:
+      linear-gradient(135deg, rgba(63, 95, 143, 0.14), transparent 42%),
+      linear-gradient(180deg, #ffffff, #f8fbff);
+  }
+
+  .hero-visual::before {
+    content: "";
+    position: absolute;
+    inset: 24px;
+    background-image:
+      linear-gradient(115deg, transparent 0 15%, rgba(63, 95, 143, 0.18) 15% 16%, transparent 16% 100%),
+      linear-gradient(35deg, transparent 0 22%, rgba(63, 95, 143, 0.14) 22% 23%, transparent 23% 100%),
+      radial-gradient(circle at 20% 72%, var(--accent) 0 3px, transparent 4px),
+      radial-gradient(circle at 46% 44%, var(--accent) 0 3px, transparent 4px),
+      radial-gradient(circle at 70% 26%, var(--accent) 0 3px, transparent 4px),
+      radial-gradient(circle at 84% 58%, var(--accent) 0 3px, transparent 4px);
+    opacity: 0.82;
+  }
+
+  .hero-visual::after {
+    content: "";
+    position: absolute;
+    right: -28px;
+    bottom: -28px;
+    width: 280px;
+    height: 180px;
+    border: 1px solid rgba(63, 95, 143, 0.14);
+    transform: rotate(-8deg);
+    background-image:
+      linear-gradient(rgba(63, 95, 143, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(63, 95, 143, 0.12) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   .section {
-    padding: 30px 0;
-    border-top: 1px solid var(--line);
+    padding: 32px 0;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .section-header a {
+    color: var(--muted);
+    font-size: 14px;
   }
 
   .grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    gap: 16px;
   }
 
-  .grid > :only-child {
-    grid-column: 1 / -1;
-  }
-
-  .category-grid {
+  .card-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
   }
 
-  .item {
-    padding: 18px;
-    background: var(--surface);
+  .card,
+  .item,
+  .info-card {
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
   }
 
+  .card,
+  .item {
+    padding: 20px;
+  }
+
+  .card p,
   .item p,
   .meta {
     color: var(--muted);
   }
 
-  .category-card {
-    display: block;
-    min-height: 136px;
-    padding: 16px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--text);
-  }
-
-  .category-card:hover {
-    text-decoration: none;
-    border-color: #aabbb7;
-  }
-
-  .category-card strong {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 17px;
-  }
-
-  .category-card span {
-    display: block;
-    color: var(--muted);
+  .card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
     font-size: 14px;
   }
 
+  .tag-list,
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    margin: 12px 0 0;
+    list-style: none;
+  }
+
+  .tag-list li,
+  .tag,
+  .category {
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 13px;
+  }
+
+  .writing-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .writing-tabs a {
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+  }
+
+  .writing-tabs a:hover {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
   .writing-section {
-    scroll-margin-top: 24px;
+    scroll-margin-top: 90px;
   }
 
   .writing-heading {
@@ -258,11 +380,7 @@ const isActive = (href) => {
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 18px;
-  }
-
-  .writing-heading h2 {
-    margin-bottom: 0;
+    margin-bottom: 14px;
   }
 
   .writing-heading span,
@@ -272,18 +390,21 @@ const isActive = (href) => {
   }
 
   .writing-list {
-    display: grid;
-    gap: 10px;
+    overflow: hidden;
     padding: 0;
     margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
     list-style: none;
   }
 
   .writing-row {
     display: grid;
-    grid-template-columns: 140px minmax(0, 1fr);
+    grid-template-columns: 132px minmax(0, 1fr) 32px;
     gap: 18px;
-    padding: 14px 0;
+    align-items: center;
+    padding: 18px 20px;
     border-top: 1px solid var(--line);
   }
 
@@ -297,13 +418,17 @@ const isActive = (href) => {
   }
 
   .writing-row h3 {
-    margin-bottom: 4px;
-    font-size: 18px;
+    margin-bottom: 5px;
   }
 
   .writing-row p {
-    margin-bottom: 0;
     color: var(--muted);
+    font-size: 15px;
+  }
+
+  .writing-arrow {
+    color: var(--line-strong);
+    font-size: 18px;
   }
 
   .pagination {
@@ -311,7 +436,7 @@ const isActive = (href) => {
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 18px;
+    margin-top: 16px;
     color: var(--muted);
     font-size: 14px;
   }
@@ -328,25 +453,40 @@ const isActive = (href) => {
   }
 
   .pagination .disabled {
-    color: var(--muted);
     opacity: 0.55;
   }
 
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 0;
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+  }
+
+  .info-card {
+    padding: 22px;
+  }
+
+  .info-card h2 {
+    margin-bottom: 16px;
+  }
+
+  .info-list {
+    display: grid;
+    gap: 10px;
     margin: 0;
+    padding: 0;
     list-style: none;
   }
 
-  .tag-list li {
-    padding: 4px 10px;
-    background: var(--tag);
-    border-radius: 999px;
-    color: var(--accent-strong);
-    font-size: 14px;
+  .info-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--muted);
+  }
+
+  .info-list strong {
+    color: var(--text);
   }
 
   .list {
@@ -368,16 +508,30 @@ const isActive = (href) => {
   .article .category {
     display: inline-flex;
     width: fit-content;
-    padding: 4px 10px;
     margin: 0 0 12px;
-    background: var(--tag);
-    border-radius: 999px;
-    color: var(--accent-strong);
-    font-size: 14px;
+  }
+
+  .article .meta {
+    margin: 10px 0 28px;
   }
 
   .article :is(h2, h3) {
     margin-top: 32px;
+  }
+
+  .article p {
+    margin-bottom: 16px;
+  }
+
+  .article :global(.katex-display) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 0;
+    margin: 22px 0;
+  }
+
+  .article :global(.katex) {
+    font-size: 1.02em;
   }
 
   .article img {
@@ -395,6 +549,18 @@ const isActive = (href) => {
     margin: 24px 0;
   }
 
+  @media (max-width: 850px) {
+    .hero-panel,
+    .profile-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .card-grid,
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 700px) {
     .site-header {
       align-items: flex-start;
@@ -402,20 +568,20 @@ const isActive = (href) => {
     }
 
     main {
-      padding: 36px 0;
+      padding: 30px 0 54px;
     }
 
-    .grid {
-      grid-template-columns: 1fr;
-    }
-
-    .category-grid {
-      grid-template-columns: 1fr;
+    .hero-panel {
+      padding: 24px;
     }
 
     .writing-row {
       grid-template-columns: 1fr;
       gap: 4px;
+    }
+
+    .writing-arrow {
+      display: none;
     }
   }
 </style>
