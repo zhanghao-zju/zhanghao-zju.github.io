@@ -11,6 +11,17 @@ const featuredPosts = featuredSlugs.length
       .map((slug) => posts.find((post) => post.frontmatter.slug === slug))
       .filter(Boolean)
   : latestPosts.slice(0, 3);
+const featuredProjects = [
+  {
+    title: '个人主页与写作系统',
+    summary: '基于 Astro 搭建的个人主页，支持文章分类、分页、图片资源管理和 GitHub Pages 自动部署。',
+    tags: ['Astro', 'GitHub Pages', 'Markdown'],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/zhanghao-zju/zhanghao-zju.github.io' },
+      { label: '线上页面', href: 'https://zhanghao-zju.github.io/' },
+    ],
+  },
+];
 const heroImage = '';
 ---
 
@@ -44,6 +55,29 @@ const heroImage = '';
           <article class="card">
             <p class="eyebrow">{formatDate(post.frontmatter.date)}</p>
             <h3><a href={`/blog/${post.frontmatter.slug}/`}>{post.frontmatter.title}</a></h3>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>代表项目</h2>
+      <a href="/projects/">查看全部 →</a>
+    </div>
+    <div class="card-grid">
+      {
+        featuredProjects.map((project) => (
+          <article class="card">
+            <h3>{project.title}</h3>
+            <p>{project.summary}</p>
+            <div class="tag-row">
+              {project.tags.map((tag) => <span class="tag">{tag}</span>)}
+            </div>
+            <div class="card-footer">
+              {project.links.map((link) => <a href={link.href}>{link.label} →</a>)}
+            </div>
           </article>
         ))
       }
