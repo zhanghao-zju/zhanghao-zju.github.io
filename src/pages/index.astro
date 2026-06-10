@@ -22,7 +22,7 @@ const featuredProjects = [
     ],
   },
 ];
-const heroImage = '';
+const heroImage = '/images/home/hero-zh-coder.jpg';
 ---
 
 <BaseLayout title="张浩 | 个人主页">
@@ -37,7 +37,7 @@ const heroImage = '';
     </div>
     {
       heroImage ? (
-        <img class="hero-image" src={heroImage} alt="" />
+        <img class="hero-image" src={heroImage} alt="" loading="lazy" decoding="async" />
       ) : (
         <div class="hero-visual" aria-hidden="true"></div>
       )
