@@ -11,7 +11,7 @@ http://127.0.0.1:4321/
 线上地址：
 
 ```text
-https://zhanghao-zju.github.io/
+https://zhanghao0806.github.io/
 ```
 
 ## 常用目录
@@ -137,7 +137,7 @@ src/pages/projects.astro
   tags: ['标签1', '标签2'],
   links: [
     { label: '项目实验记录', href: '/blog/你的文章slug/' },
-    { label: 'GitHub', href: 'https://github.com/zhanghao-zju/你的项目仓库' },
+    { label: 'GitHub', href: 'https://github.com/zhanghao0806/你的项目仓库' },
   ],
 }
 ```
@@ -165,7 +165,7 @@ category: lab-log
 project:
   name: QNN 手写数字分类
   summary: 使用参数化量子电路完成 MNIST 0/1 分类实验。
-  github: https://github.com/zhanghao-zju/xxx
+  github: https://github.com/zhanghao0806/xxx
 ---
 ```
 
@@ -269,7 +269,7 @@ category: tech-notes
 `slug` 是文章网址的一部分，例如：
 
 ```text
-https://zhanghao-zju.github.io/blog/qnn-note-02/
+https://zhanghao0806.github.io/blog/qnn-note-02/
 ```
 
 `category` 只能使用下面四种之一：
@@ -379,13 +379,13 @@ git push personal-homepage main
 GitHub Actions 会自动部署。部署状态看这里：
 
 ```text
-https://github.com/zhanghao-zju/zhanghao-zju.github.io/actions
+https://github.com/zhanghao0806/zhanghao0806.github.io/actions
 ```
 
 部署成功后访问：
 
 ```text
-https://zhanghao-zju.github.io/
+https://zhanghao0806.github.io/
 ```
 
 ## 支持哪些笔记格式
