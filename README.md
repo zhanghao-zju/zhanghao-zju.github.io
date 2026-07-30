@@ -291,6 +291,18 @@ src/lib/writing.js
 export const PAGE_SIZE = 5;
 ```
 
+### 新文章加入生僻字后更新网页字体
+
+文章页使用的是按当前文章内容裁剪过的霞鹜文楷 WOFF2，体积远小于完整字体。普通新增文章即使不更新字体也能正常显示，尚未包含的字会暂时使用后备字体。
+
+如果新文章加入了较多新汉字，保存文章后运行：
+
+```sh
+npm run font:subset
+```
+
+脚本依赖 FontTools 的 `pyftsubset`（可用 `python -m pip install fonttools brotli` 安装），默认读取 Typora 的 Phycat 主题字体，并根据所有文章重新生成网页字体。如果字体不在默认位置，可通过 `LXGW_WENKAI_SOURCE=/字体路径/LXGWWenKai-Regular.ttf npm run font:subset` 指定；也可用 `PYFTSUBSET` 指定命令位置。生成后再运行 `npm run build` 即可。
+
 ## 图片放哪里
 
 文章图片建议统一放在：
@@ -332,7 +344,7 @@ Markdown 里这样引用：
 进入项目目录：
 
 ```sh
-cd /Users/zhanghao/code/personal-homepage
+cd /path/to/personal-homepage
 ```
 
 启动本地服务：

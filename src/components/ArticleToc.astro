@@ -1,0 +1,197 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const minDepth = Math.min(...headings.map(({ depth }) => depth));
+const counters = Array(7).fill(0);
+
+const items = headings.map((heading) => {
+  counters[heading.depth] += 1;
+
+  for (let depth = heading.depth + 1; depth < counters.length; depth += 1) {
+    counters[depth] = 0;
+  }
+
+  const number = heading.depth <= 3
+    ? `${counters.slice(minDepth, heading.depth + 1).join('.')}.`
+    : '';
+
+  return {
+    ...heading,
+    level: Math.min(heading.depth - minDepth, 3),
+    indent: `${Math.min(heading.depth - minDepth, 3) * 12}px`,
+    lineOffset: `${10 + Math.max(heading.depth - minDepth - 1, 0) * 12}px`,
+    number,
+  };
+});
+---
+
+<aside class="article-toc article-toc--desktop" data-article-toc aria-label="文章目录">
+  <div class="article-toc__heading">
+    <span class="article-toc__spark" aria-hidden="true">✦</span>
+    <span>文章目录</span>
+  </div>
+  <nav class="article-toc__nav" aria-label="文章目录导航">
+    <ol class="article-toc__list">
+      {
+        items.map((item) => (
+          <li
+            class="article-toc__item"
+            data-toc-level={item.level}
+            style={`--toc-indent: ${item.indent}; --toc-line: ${item.lineOffset}`}
+          >
+            <a
+              class="article-toc__link"
+              href={`#${item.slug}`}
+              data-article-toc-link
+              data-heading-id={item.slug}
+            >
+              {item.number && <span class="article-toc__number" aria-hidden="true">{item.number}</span>}
+              <span class="article-toc__text">{item.text}</span>
+              <span class="article-toc__active-mark" aria-hidden="true">✦</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+</aside>
+
+<details class="article-toc-mobile" data-article-toc>
+  <summary>
+    <span class="article-toc__spark" aria-hidden="true">✦</span>
+    <span>文章目录</span>
+    <span class="article-toc-mobile__hint">
+      <span class="article-toc-mobile__hint-closed">展开</span>
+      <span class="article-toc-mobile__hint-open">收起</span>
+    </span>
+  </summary>
+  <nav class="article-toc__nav" aria-label="移动端文章目录导航">
+    <ol class="article-toc__list">
+      {
+        items.map((item) => (
+          <li
+            class="article-toc__item"
+            data-toc-level={item.level}
+            style={`--toc-indent: ${item.indent}; --toc-line: ${item.lineOffset}`}
+          >
+            <a
+              class="article-toc__link"
+              href={`#${item.slug}`}
+              data-article-toc-link
+              data-heading-id={item.slug}
+            >
+              {item.number && <span class="article-toc__number" aria-hidden="true">{item.number}</span>}
+              <span class="article-toc__text">{item.text}</span>
+              <span class="article-toc__active-mark" aria-hidden="true">✦</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+</details>
+
+<script>
+  const tocLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('[data-article-toc-link]'),
+  );
+
+  const setActiveHeading = (headingId: string, revealInToc = false) => {
+    const activeLinks: HTMLAnchorElement[] = [];
+
+    for (const link of tocLinks) {
+      const isActive = link.dataset.headingId === headingId;
+      link.classList.toggle('is-active', isActive);
+
+      if (isActive) {
+        link.setAttribute('aria-current', 'location');
+        activeLinks.push(link);
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    }
+
+    if (!revealInToc) return;
+
+    for (const link of activeLinks) {
+      const nav = link.closest<HTMLElement>('.article-toc__nav');
+      if (!nav || link.offsetParent === null) continue;
+
+      const navRect = nav.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      const isOutsideView = linkRect.top < navRect.top || linkRect.bottom > navRect.bottom;
+
+      if (isOutsideView) {
+        nav.scrollTop += linkRect.top - navRect.top - (nav.clientHeight - linkRect.height) / 2;
+      }
+    }
+  };
+
+  const linksByHeading = new Map<string, HTMLAnchorElement[]>();
+
+  for (const link of tocLinks) {
+    const headingId = link.dataset.headingId;
+    if (!headingId) continue;
+
+    const matchingLinks = linksByHeading.get(headingId) ?? [];
+    matchingLinks.push(link);
+    linksByHeading.set(headingId, matchingLinks);
+
+    link.addEventListener('click', () => {
+      setActiveHeading(headingId);
+      link.closest('details')?.removeAttribute('open');
+    });
+  }
+
+  const observedHeadings = Array.from(linksByHeading.keys())
+    .map((headingId) => document.getElementById(headingId))
+    .filter((heading): heading is HTMLElement => heading !== null);
+
+  if (observedHeadings.length > 0) {
+    const rawHash = window.location.hash.slice(1);
+    let initialHeading = rawHash;
+
+    try {
+      initialHeading = decodeURIComponent(rawHash);
+    } catch {
+      // A malformed external fragment should not disable the table of contents.
+    }
+
+    setActiveHeading(
+      linksByHeading.has(initialHeading) ? initialHeading : observedHeadings[0].id,
+      true,
+    );
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const reachedPageEnd = window.scrollY > 0
+            && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+
+          if (reachedPageEnd) {
+            setActiveHeading(observedHeadings[observedHeadings.length - 1].id, true);
+            return;
+          }
+
+          const visibleHeading = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+
+          if (visibleHeading?.target.id) setActiveHeading(visibleHeading.target.id, true);
+        },
+        { rootMargin: '-18% 0px -72% 0px', threshold: 0 },
+      );
+
+      observedHeadings.forEach((heading) => observer.observe(heading));
+    }
+  }
+</script>

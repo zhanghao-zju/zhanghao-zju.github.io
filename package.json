@@ -7,7 +7,12 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run check:pet:ready && astro build && npm run check:cat-pages",
+    "check:pet": "node scripts/validate-pet-assets.mjs",
+    "check:pet:ready": "node scripts/validate-pet-assets.mjs --require-ready",
+    "check:cat-pages": "node scripts/validate-cat-companion-build.mjs",
+    "prepare:pet-runtime": "node scripts/prepare-pet-runtime.mjs",
+    "font:subset": "node scripts/subset-blog-font.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -16,5 +21,8 @@
     "katex": "^0.17.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }

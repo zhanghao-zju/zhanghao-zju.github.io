@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleToc from '../../components/ArticleToc.astro';
 import { categoryLabels, formatDate } from '../../lib/writing.js';
+import '../../styles/article-sakura.css';
 
 export async function getStaticPaths() {
   const posts = Object.values(import.meta.glob('../../content/blog/*.md', { eager: true }));
@@ -12,16 +14,35 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const Content = post.default;
+const Content = post.Content;
+const headings = post.getHeadings();
+const hasToc = headings.length > 0;
+const headingStartDepth = hasToc
+  ? Math.min(...headings.map(({ depth }) => depth))
+  : undefined;
 
 ---
 
 <BaseLayout title={`${post.frontmatter.title} | Blog`}>
-  <article class="article">
-    <p class="eyebrow">Writing</p>
-    <p class="category">{categoryLabels[post.frontmatter.category]}</p>
-    <h1>{post.frontmatter.title}</h1>
-    <p class="meta">{formatDate(post.frontmatter.date)}</p>
-    <Content />
-  </article>
+  <div
+    class:list={['article-reading-layout', { 'has-toc': hasToc }]}
+    data-heading-start-depth={headingStartDepth}
+  >
+    {hasToc && <ArticleToc headings={headings} />}
+
+    <article class="article-page">
+      <header class="article-header">
+        <div class="article-header__labels">
+          <p class="eyebrow">Writing</p>
+          <p class="category">{categoryLabels[post.frontmatter.category]}</p>
+        </div>
+        <h1>{post.frontmatter.title}</h1>
+        <p class="meta">{formatDate(post.frontmatter.date)}</p>
+      </header>
+
+      <div class="article-prose">
+        <Content />
+      </div>
+    </article>
+  </div>
 </BaseLayout>

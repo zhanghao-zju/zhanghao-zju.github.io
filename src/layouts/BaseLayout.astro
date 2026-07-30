@@ -1,5 +1,6 @@
 ---
 import 'katex/dist/katex.min.css';
+import CatCompanion from '../components/CatCompanion.astro';
 
 const {
   title = '个人主页',
@@ -48,6 +49,7 @@ const isActive = (href) => {
     <main>
       <slot />
     </main>
+    <CatCompanion />
   </body>
 </html>
 
@@ -133,21 +135,21 @@ const isActive = (href) => {
     object-fit: cover;
   }
 
-  nav {
+  .site-header nav {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     font-size: 15px;
   }
 
-  nav a {
+  .site-header nav a {
     padding: 6px 12px;
     border-radius: 8px;
     color: var(--muted);
   }
 
-  nav a.active,
-  nav a:hover {
+  .site-header nav a.active,
+  .site-header nav a:hover {
     background: var(--accent-soft);
     color: var(--accent-strong);
   }
@@ -520,58 +522,6 @@ const isActive = (href) => {
     padding: 0;
     margin: 0;
     list-style: none;
-  }
-
-  .article {
-    max-width: 760px;
-  }
-
-  .article h1 {
-    font-size: clamp(28px, 4vw, 42px);
-  }
-
-  .article .category {
-    display: inline-flex;
-    width: fit-content;
-    margin: 0 0 12px;
-  }
-
-  .article .meta {
-    margin: 10px 0 28px;
-  }
-
-  .article :is(h2, h3) {
-    margin-top: 32px;
-  }
-
-  .article p {
-    margin-bottom: 16px;
-  }
-
-  .article :global(.katex-display) {
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 8px 0;
-    margin: 22px 0;
-  }
-
-  .article :global(.katex) {
-    font-size: 1.02em;
-  }
-
-  .article img {
-    display: block;
-    width: min(100%, 680px);
-    max-height: 520px;
-    height: auto;
-    margin: 24px auto;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    object-fit: contain;
-  }
-
-  .article figure {
-    margin: 24px 0;
   }
 
   @media (max-width: 850px) {

@@ -12,6 +12,17 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# local generated QA and conversion scratch files
+/tmp/
+
+# local-only pet concept and QA history; production sources remain tracked
+/assets/pet-source/cat-v1/concepts/
+/assets/pet-source/cat-v1/layers/
+/assets/pet-source/cat-v1/masters/
+/assets/pet-source/cat-v1/qa/
+/assets/pet-source/cat-v1/reviews/
+/assets/pet-source/cat-v1/walk/review/
+
 
 # environment variables
 .env
