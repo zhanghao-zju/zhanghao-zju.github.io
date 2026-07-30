@@ -19,6 +19,8 @@ const RAPID_CLICK_LIMIT = 4;
 const RAPID_CLICK_COOLDOWN_MS = 4_000;
 const IDLE_MIN_MS = 55_000;
 const IDLE_JITTER_MS = 35_000;
+const MOBILE_LAYOUT_QUERY = '(max-width: 700px)';
+const ARTICLE_TOC_OVERLAY_QUERY = '(max-width: 1050px)';
 
 const lines = rawLines as PetLine[];
 
@@ -95,6 +97,7 @@ class CatCompanionController {
   #noseHitArea = { cx: 0.5, cy: 0.35, r: 0.085 };
   #pathname: string;
   #articleReadingMode = false;
+  #mobileToc: HTMLDetailsElement | null = null;
   #abort = new AbortController();
   #speechAbort: AbortController | null = null;
   #speechQueue: SpeechRequest[] = [];
@@ -143,7 +146,10 @@ class CatCompanionController {
     this.#walkRoot = required(root, '[data-pet-walk-root]');
     this.#pathname = root.dataset.pagePath || window.location.pathname;
     this.#articleReadingMode = /^\/blog\/[^/]+\/?$/.test(this.#pathname);
-    if (this.#articleReadingMode) this.#root.dataset.pageContext = 'article';
+    if (this.#articleReadingMode) {
+      this.#root.dataset.pageContext = 'article';
+      this.#mobileToc = document.querySelector<HTMLDetailsElement>('.article-toc-mobile');
+    }
     this.#lastReturnGreetingAt = readLastReturnGreetingAt();
     this.#machine = new PetStateMachine((state) => this.#renderState(state));
     this.#gaze = new GazeController(root, this.#character, this.#reducedMotionQuery.matches);
@@ -198,14 +204,16 @@ class CatCompanionController {
     this.#recallButton.addEventListener('keydown', this.#onRecallButtonKeyDown, { signal });
 
     this.#reducedMotionQuery.addEventListener('change', this.#onMotionPreferenceChange, { signal });
+    this.#mobileToc?.addEventListener('toggle', this.#onMobileTocToggle, { signal });
   }
 
   #setInitialVisibility(): void {
     const storedPreference = readHiddenPreference();
-    const narrowScreen = window.matchMedia('(max-width: 700px)').matches;
+    const narrowScreen = window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
+    const shortScreen = window.matchMedia('(max-height: 820px)').matches;
     const shouldStartHidden = this.#articleReadingMode
       ? true
-      : (storedPreference ?? (this.#coarsePointer || narrowScreen));
+      : (storedPreference ?? (this.#coarsePointer || narrowScreen || shortScreen));
     this.#setHidden(shouldStartHidden, false);
   }
 
@@ -357,6 +365,16 @@ class CatCompanionController {
     this.#activateButtonFromKeyboard(event, this.#onRecall);
   };
 
+  #onMobileTocToggle = (): void => {
+    if (
+      this.#mobileToc?.open &&
+      window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches &&
+      !this.#hidden
+    ) {
+      this.#setHidden(true, false);
+    }
+  };
+
   #activateButtonFromKeyboard(event: KeyboardEvent, action: () => void): void {
     if ((event.key !== 'Enter' && event.key !== ' ') || event.repeat) return;
     event.preventDefault();
@@ -444,6 +462,9 @@ class CatCompanionController {
 
   #onRecall = (): void => {
     const shouldMoveFocus = document.activeElement === this.#recallButton;
+    if (this.#mobileToc?.open && window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches) {
+      this.#mobileToc.open = false;
+    }
     this.#pendingArrival = !this.#reducedMotionQuery.matches;
     this.#touchPrimed = true;
     this.#setHidden(false, true);
