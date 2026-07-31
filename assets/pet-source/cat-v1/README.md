@@ -8,6 +8,9 @@ This directory is intentionally outside `public/` and is never deployed.
   production frames are named `walk-01.png` through `walk-08.png` and share one baseline.
 - `extras/mouth-yawn.png` is an optional source expression that is not referenced by the current
   runtime manifest.
+- `arrival/` contains the source-only recall transition: a slower reuse of the eight walk frames,
+  an independently layered blue-book materialization, two jump keys, ten full-canvas transition
+  frames, and light/dark/continuity QA. See `arrival/README.md` for its canvas and timing contract.
 - Local-only `qa/`, `reviews/`, `layers/`, `concepts/`, and `masters/` folders preserve the
   production and review trail when available. They are ignored by Git because the final source
   layers above are sufficient to reproduce the deployed runtime.

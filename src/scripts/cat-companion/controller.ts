@@ -19,7 +19,6 @@ const RAPID_CLICK_LIMIT = 4;
 const RAPID_CLICK_COOLDOWN_MS = 4_000;
 const IDLE_MIN_MS = 55_000;
 const IDLE_JITTER_MS = 35_000;
-const MOBILE_LAYOUT_QUERY = '(max-width: 700px)';
 const ARTICLE_TOC_OVERLAY_QUERY = '(max-width: 1050px)';
 
 const lines = rawLines as PetLine[];
@@ -29,8 +28,6 @@ const required = <T extends Element>(root: ParentNode, selector: string): T => {
   if (!element) throw new Error(`Cat companion is missing ${selector}`);
   return element;
 };
-
-const punctuation = new Set(['。', '，', '！', '？', '…', '、', '.', ',', '!', '?']);
 
 interface AssetManifest {
   schemaVersion: number;
@@ -57,6 +54,13 @@ interface AssetManifest {
     canvas: { width: number; height: number; coordinateSpace: 'top-left' };
     frames: string[];
     frameDurationMs: number;
+  };
+  arrival: {
+    canvas: { width: number; height: number; coordinateSpace: 'top-left' };
+    walkOffset: { x: number; y: number };
+    frames: string[];
+    durationsMs: number[];
+    reducedMotionFadeMs: number;
   };
   anchors: {
     head: { x: number; y: number };
@@ -87,17 +91,19 @@ class CatCompanionController {
   #assetRoot: HTMLElement | null;
   #walkRoot: HTMLElement;
   #assetLoadStarted = false;
-  #walkSources: string[] = [];
   #walkFrames: HTMLImageElement[] = [];
-  #walkLoadPromise: Promise<boolean> | null = null;
-  #walkCanvas = { width: 0, height: 0 };
-  #walkFrameDurationMs = 110;
+  #arrivalFrames: HTMLImageElement[] = [];
+  #walkFrameDurationMs = 135;
+  #arrivalDurationsMs: number[] = [];
+  #arrivalReducedMotionFadeMs = 190;
   #arrivalRunVersion = 0;
   #pendingArrival = false;
+  #pendingRecallSpeech = false;
   #noseHitArea = { cx: 0.5, cy: 0.35, r: 0.085 };
   #pathname: string;
   #articleReadingMode = false;
   #mobileToc: HTMLDetailsElement | null = null;
+  #hiddenForToc = false;
   #abort = new AbortController();
   #speechAbort: AbortController | null = null;
   #speechQueue: SpeechRequest[] = [];
@@ -157,7 +163,7 @@ class CatCompanionController {
     this.#bindEvents();
     this.#setInitialVisibility();
     this.#root.dataset.visible = 'true';
-    this.#root.dataset.renderer = 'fallback';
+    this.#root.dataset.renderer = 'loading';
     this.#root.dataset.reducedMotion = String(this.#reducedMotionQuery.matches);
     this.#root.dataset.mouth = 'closed';
     this.#bubble.hidden = true;
@@ -209,11 +215,7 @@ class CatCompanionController {
 
   #setInitialVisibility(): void {
     const storedPreference = readHiddenPreference();
-    const narrowScreen = window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
-    const shortScreen = window.matchMedia('(max-height: 820px)').matches;
-    const shouldStartHidden = this.#articleReadingMode
-      ? true
-      : (storedPreference ?? (this.#coarsePointer || narrowScreen || shortScreen));
+    const shouldStartHidden = storedPreference ?? false;
     this.#setHidden(shouldStartHidden, false);
   }
 
@@ -366,12 +368,19 @@ class CatCompanionController {
   };
 
   #onMobileTocToggle = (): void => {
-    if (
-      this.#mobileToc?.open &&
-      window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches &&
-      !this.#hidden
-    ) {
-      this.#setHidden(true, false);
+    if (!window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches) return;
+    if (this.#mobileToc?.open) {
+      this.#root.dataset.tocOpen = 'true';
+      if (!this.#hidden) {
+        this.#hiddenForToc = true;
+        this.#setHidden(true, false);
+      }
+      return;
+    }
+    delete this.#root.dataset.tocOpen;
+    if (this.#hiddenForToc) {
+      this.#hiddenForToc = false;
+      this.#setHidden(false, false);
     }
   };
 
@@ -456,6 +465,7 @@ class CatCompanionController {
 
   #onHide = (): void => {
     const shouldMoveFocus = document.activeElement === this.#hideButton;
+    this.#hiddenForToc = false;
     this.#setHidden(true, true);
     if (shouldMoveFocus) this.#recallButton.focus({ preventScroll: true });
   };
@@ -465,15 +475,20 @@ class CatCompanionController {
     if (this.#mobileToc?.open && window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches) {
       this.#mobileToc.open = false;
     }
-    this.#pendingArrival = !this.#reducedMotionQuery.matches;
+    delete this.#root.dataset.tocOpen;
+    this.#hiddenForToc = false;
+    this.#pendingArrival = true;
+    this.#pendingRecallSpeech = true;
+    this.#root.dataset.arrivalPhase = 'preparing';
     this.#touchPrimed = true;
     this.#setHidden(false, true);
-    if (this.#root.dataset.renderer === 'assets' && this.#pendingArrival) {
+    if (this.#root.dataset.renderer === 'assets') {
       void this.#playArrival();
+    } else if (this.#root.dataset.renderer === 'fallback') {
+      this.#finishRecall();
     }
     if (this.#coarsePointer) this.#openTouchToolbar();
     if (shouldMoveFocus) this.#stage.focus({ preventScroll: true });
-    this.#requestSpeech({ trigger: 'recall', priority: 90, announce: true });
   };
 
   #openTouchToolbar(): void {
@@ -573,17 +588,14 @@ class CatCompanionController {
     this.#root.dataset.reducedMotion = String(event.matches);
     this.#gaze.setReducedMotion(event.matches);
     if (event.matches) {
-      this.#stopArrival();
+      if (this.#root.dataset.arrivalPhase) void this.#playArrival();
       window.clearTimeout(this.#blinkTimer);
       window.clearTimeout(this.#earTimer);
       delete this.#root.dataset.blinking;
       delete this.#root.dataset.earTwitch;
       if (this.#activeLine) {
         this.#bubbleText.textContent = this.#activeLine.text;
-        this.#root.dataset.mouth =
-          this.#activeLine.mood === 'happy' || this.#activeLine.mood === 'relaxed'
-            ? 'smile'
-            : 'closed';
+        this.#root.dataset.mouth = 'closed';
       }
     } else if (!this.#hidden && !document.hidden) {
       this.#gaze.start();
@@ -650,25 +662,25 @@ class CatCompanionController {
     try {
       if (this.#reducedMotionQuery.matches) {
         this.#bubbleText.textContent = line.text;
+        this.#root.dataset.mouth = 'closed';
       } else {
+        this.#root.dataset.mouth =
+          line.mood === 'surprised' || line.mood === 'playful' || line.mood === 'happy'
+            ? 'open'
+            : 'small';
         const characters = Array.from(line.text);
-        for (let index = 0; index < characters.length; index += 1) {
+        for (const character of characters) {
           if (this.#reducedMotionQuery.matches) {
             this.#bubbleText.textContent = line.text;
+            this.#root.dataset.mouth = 'closed';
             break;
           }
-          const character = characters[index];
           this.#bubbleText.textContent += character;
-          this.#root.dataset.mouth = punctuation.has(character)
-            ? 'small'
-            : index % 3 === 0
-              ? 'open'
-              : 'small';
-          await wait(punctuation.has(character) ? 105 : 34, signal);
+          await wait(34, signal);
         }
+        this.#root.dataset.mouth = 'closed';
       }
 
-      this.#root.dataset.mouth = line.mood === 'happy' || line.mood === 'relaxed' ? 'smile' : 'closed';
       await wait(Math.max(1_150, Math.min(2_400, line.text.length * 105)), signal);
       this.#root.dataset.mouth = 'closed';
       await wait(this.#reducedMotionQuery.matches ? 0 : 260, signal);
@@ -808,19 +820,15 @@ class CatCompanionController {
   }
 
   async #loadAssetRenderer(): Promise<void> {
-    if (!this.#assetRoot || this.#hidden || this.#assetLoadStarted) return;
+    if (!this.#assetRoot || this.#assetLoadStarted) return;
     this.#assetLoadStarted = true;
 
     try {
       const response = await fetch('/pet/cat-v1/manifest.json', { cache: 'no-cache' });
-      if (!response.ok) {
-        this.#pendingArrival = false;
-        return;
-      }
+      if (!response.ok) throw new Error(`Unable to load pet manifest (${response.status}).`);
       const manifest = (await response.json()) as AssetManifest;
       if (manifest.schemaVersion !== 1 || !manifest.ready) {
-        this.#pendingArrival = false;
-        return;
+        throw new Error('Pet manifest is not ready.');
       }
 
       const layerEntries = [
@@ -845,36 +853,68 @@ class CatCompanionController {
         ['paw', manifest.layers.paw],
       ] as const;
 
-      const images = await Promise.all(
-        layerEntries.map(
-          ([part, source]) =>
-            new Promise<HTMLImageElement>((resolve, reject) => {
-              const image = new Image();
-              image.alt = '';
-              image.decoding = 'async';
-              image.draggable = false;
-              image.fetchPriority = 'low';
-              image.dataset.assetPart = part;
-              image.onload = () => {
-                if (
-                  image.naturalWidth !== manifest.canvas.width ||
-                  image.naturalHeight !== manifest.canvas.height
-                ) {
-                  reject(
-                    new Error(
-                      `${source} is ${image.naturalWidth}x${image.naturalHeight}; expected ` +
-                        `${manifest.canvas.width}x${manifest.canvas.height}`,
-                    ),
-                  );
-                  return;
-                }
-                resolve(image);
-              };
-              image.onerror = () => reject(new Error(`Unable to load ${source}`));
-              image.src = source;
-            }),
+      if (
+        manifest.walk.frames.length !== 8 ||
+        manifest.arrival.frames.length !== 10 ||
+        manifest.arrival.durationsMs.length !== 10 ||
+        manifest.arrival.walkOffset.x !== 0 ||
+        manifest.arrival.walkOffset.y !== 64
+      ) {
+        throw new Error('Pet arrival manifest does not match the required sequence contract.');
+      }
+
+      const loadImage = (
+        source: string,
+        width: number,
+        height: number,
+        data: Record<string, string>,
+      ) =>
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const image = new Image();
+          image.alt = '';
+          image.decoding = 'async';
+          image.draggable = false;
+          image.fetchPriority = 'low';
+          for (const [key, value] of Object.entries(data)) image.dataset[key] = value;
+          image.onload = () => {
+            if (image.naturalWidth !== width || image.naturalHeight !== height) {
+              reject(
+                new Error(
+                  `${source} is ${image.naturalWidth}x${image.naturalHeight}; expected ` +
+                    `${width}x${height}`,
+                ),
+              );
+              return;
+            }
+            resolve(image);
+          };
+          image.onerror = () => reject(new Error(`Unable to load ${source}`));
+          image.src = source;
+        });
+
+      const [images, walkFrames, arrivalFrames] = await Promise.all([
+        Promise.all(
+          layerEntries.map(([part, source]) =>
+            loadImage(source, manifest.canvas.width, manifest.canvas.height, { assetPart: part }),
+          ),
         ),
-      );
+        Promise.all(
+          manifest.walk.frames.map((source, index) =>
+            loadImage(source, manifest.walk.canvas.width, manifest.walk.canvas.height, {
+              sequenceKind: 'walk',
+              sequenceFrame: String(index + 1),
+            }),
+          ),
+        ),
+        Promise.all(
+          manifest.arrival.frames.map((source, index) =>
+            loadImage(source, manifest.arrival.canvas.width, manifest.arrival.canvas.height, {
+              sequenceKind: 'arrival',
+              sequenceFrame: String(index + 1),
+            }),
+          ),
+        ),
+      ]);
 
       const fragment = document.createDocumentFragment();
       const headGroup = document.createElement('div');
@@ -910,104 +950,107 @@ class CatCompanionController {
         }
       }
       this.#applyAssetManifest(manifest);
-      this.#walkSources = [...manifest.walk.frames];
-      this.#walkCanvas = { width: manifest.walk.canvas.width, height: manifest.walk.canvas.height };
+      this.#walkFrames = walkFrames;
+      this.#arrivalFrames = arrivalFrames;
       this.#walkFrameDurationMs = manifest.walk.frameDurationMs;
+      this.#arrivalDurationsMs = [...manifest.arrival.durationsMs];
+      this.#arrivalReducedMotionFadeMs = manifest.arrival.reducedMotionFadeMs;
       this.#assetRoot.replaceChildren(fragment);
+      this.#walkRoot.replaceChildren(...walkFrames, ...arrivalFrames);
       this.#root.dataset.renderer = 'assets';
       this.#gaze.updateBounds();
       if (this.#pendingArrival) void this.#playArrival();
     } catch {
-      this.#pendingArrival = false;
       this.#root.dataset.renderer = 'fallback';
+      this.#stopArrival(false);
+      this.#pendingArrival = false;
+      this.#finishRecall();
     }
-  }
-
-  async #ensureWalkFrames(): Promise<boolean> {
-    if (this.#walkFrames.length === 8) return true;
-    if (this.#walkLoadPromise) return this.#walkLoadPromise;
-    if (this.#walkSources.length !== 8) return false;
-
-    const loadPromise = Promise.all(
-      this.#walkSources.map(
-        (source, index) =>
-          new Promise<HTMLImageElement>((resolve, reject) => {
-            const image = new Image();
-            image.alt = '';
-            image.decoding = 'async';
-            image.draggable = false;
-            image.fetchPriority = 'low';
-            image.dataset.walkFrame = String(index + 1);
-            image.onload = () => {
-              if (
-                image.naturalWidth !== this.#walkCanvas.width ||
-                image.naturalHeight !== this.#walkCanvas.height
-              ) {
-                reject(
-                  new Error(
-                    `${source} is ${image.naturalWidth}x${image.naturalHeight}; expected ` +
-                      `${this.#walkCanvas.width}x${this.#walkCanvas.height}`,
-                  ),
-                );
-                return;
-              }
-              resolve(image);
-            };
-            image.onerror = () => reject(new Error(`Unable to load ${source}`));
-            image.src = source;
-          }),
-      ),
-    )
-      .then((frames) => {
-        this.#walkFrames = frames;
-        this.#walkRoot.replaceChildren(...frames);
-        return true;
-      })
-      .catch(() => false)
-      .finally(() => {
-        this.#walkLoadPromise = null;
-      });
-
-    this.#walkLoadPromise = loadPromise;
-    return loadPromise;
   }
 
   async #playArrival(): Promise<void> {
     const runVersion = ++this.#arrivalRunVersion;
-    const available = await this.#ensureWalkFrames();
     if (
-      !available ||
-      runVersion !== this.#arrivalRunVersion ||
+      this.#walkFrames.length !== 8 ||
+      this.#arrivalFrames.length !== 10 ||
+      this.#arrivalDurationsMs.length !== 10 ||
       this.#hidden ||
-      document.hidden ||
-      this.#reducedMotionQuery.matches
+      document.hidden
     ) {
-      this.#pendingArrival = false;
+      this.#stopArrival(false);
+      this.#finishRecall();
       return;
     }
 
     this.#pendingArrival = false;
     const frameDuration = Math.max(90, Math.min(140, this.#walkFrameDurationMs));
     this.#root.style.setProperty('--pet-walk-duration', `${frameDuration * this.#walkFrames.length}ms`);
-    this.#root.dataset.arriving = 'true';
+    const setActiveFrame = (active: HTMLImageElement) => {
+      for (const frame of [...this.#walkFrames, ...this.#arrivalFrames]) {
+        frame.dataset.active = String(frame === active);
+      }
+    };
+
+    if (this.#reducedMotionQuery.matches) {
+      const fadeMs = Math.max(160, Math.min(220, this.#arrivalReducedMotionFadeMs));
+      setActiveFrame(this.#arrivalFrames.at(-1)!);
+      this.#root.dataset.arrivalPhase = 'transition';
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      if (runVersion !== this.#arrivalRunVersion || this.#hidden || document.hidden) return;
+      this.#root.style.setProperty('--pet-arrival-handoff-duration', `${fadeMs}ms`);
+      this.#root.dataset.arrivalPhase = 'handoff';
+      await new Promise<void>((resolve) => window.setTimeout(resolve, fadeMs));
+      if (runVersion === this.#arrivalRunVersion) {
+        this.#stopArrival(false);
+        this.#finishRecall();
+      }
+      return;
+    }
+
+    this.#root.dataset.arrivalPhase = 'walk';
 
     for (let index = 0; index < this.#walkFrames.length; index += 1) {
       if (runVersion !== this.#arrivalRunVersion || this.#hidden || document.hidden) return;
-      for (const [frameIndex, frame] of this.#walkFrames.entries()) {
-        frame.dataset.active = String(frameIndex === index);
-      }
+      setActiveFrame(this.#walkFrames[index]);
       await new Promise<void>((resolve) => window.setTimeout(resolve, frameDuration));
     }
 
-    if (runVersion === this.#arrivalRunVersion) this.#stopArrival(false);
+    this.#root.dataset.arrivalPhase = 'transition';
+    for (let index = 0; index < this.#arrivalFrames.length; index += 1) {
+      if (runVersion !== this.#arrivalRunVersion || this.#hidden || document.hidden) return;
+      setActiveFrame(this.#arrivalFrames[index]);
+      await new Promise<void>((resolve) =>
+        window.setTimeout(resolve, this.#arrivalDurationsMs[index]),
+      );
+    }
+
+    if (runVersion !== this.#arrivalRunVersion || this.#hidden || document.hidden) return;
+    const handoffMs = this.#arrivalDurationsMs.at(-1) ?? 160;
+    this.#root.style.setProperty('--pet-arrival-handoff-duration', `${handoffMs}ms`);
+    this.#root.dataset.arrivalPhase = 'handoff';
+    await new Promise<void>((resolve) => window.setTimeout(resolve, handoffMs));
+    if (runVersion === this.#arrivalRunVersion) {
+      this.#stopArrival(false);
+      this.#finishRecall();
+    }
   }
 
   #stopArrival(clearPending = true): void {
     this.#arrivalRunVersion += 1;
-    if (clearPending) this.#pendingArrival = false;
-    delete this.#root.dataset.arriving;
+    if (clearPending) {
+      this.#pendingArrival = false;
+      this.#pendingRecallSpeech = false;
+    }
+    delete this.#root.dataset.arrivalPhase;
     this.#root.style.removeProperty('--pet-walk-duration');
-    for (const frame of this.#walkFrames) delete frame.dataset.active;
+    this.#root.style.removeProperty('--pet-arrival-handoff-duration');
+    for (const frame of [...this.#walkFrames, ...this.#arrivalFrames]) delete frame.dataset.active;
+  }
+
+  #finishRecall(): void {
+    if (!this.#pendingRecallSpeech || this.#hidden) return;
+    this.#pendingRecallSpeech = false;
+    this.#requestSpeech({ trigger: 'recall', priority: 90, announce: true });
   }
 
   #applyAssetManifest(manifest: AssetManifest): void {

@@ -22,6 +22,8 @@ pnpm-debug.log*
 /assets/pet-source/cat-v1/qa/
 /assets/pet-source/cat-v1/reviews/
 /assets/pet-source/cat-v1/walk/review/
+/assets/pet-source/cat-v1/arrival/review/
+/assets/pet-source/cat-v1/arrival/**/*-green.png
 
 
 # environment variables

@@ -14,6 +14,7 @@ const requireReady = process.argv.includes('--require-ready');
 const REQUIRED_SOURCE_CANVAS = { width: 1024, height: 1536 };
 const REQUIRED_RUNTIME_CANVAS = { width: 384, height: 576 };
 const REQUIRED_WALK_CANVAS = { width: 384, height: 512 };
+const REQUIRED_ARRIVAL_CANVAS = { width: 384, height: 576 };
 const CORE_BUDGET_BYTES = 300 * 1024;
 const PACKAGE_BUDGET_BYTES = 800 * 1024;
 
@@ -64,8 +65,11 @@ const layerFields = [
 ];
 
 const WALK_FRAME_COUNT = 8;
+const ARRIVAL_FRAME_COUNT = 10;
 const MIN_WALK_FRAME_DURATION_MS = 90;
 const MAX_WALK_FRAME_DURATION_MS = 140;
+const MIN_ARRIVAL_FRAME_DURATION_MS = 80;
+const MAX_ARRIVAL_FRAME_DURATION_MS = 220;
 
 let manifest;
 try {
@@ -121,9 +125,11 @@ if (
 
 const sourceCoreDirectory = get(manifest, ['source', 'coreDirectory']);
 const sourceWalkDirectory = get(manifest, ['source', 'walk', 'directory']);
+const sourceArrivalDirectory = get(manifest, ['source', 'arrival', 'directory']);
 for (const [label, directory] of [
   ['source.coreDirectory', sourceCoreDirectory],
   ['source.walk.directory', sourceWalkDirectory],
+  ['source.arrival.directory', sourceArrivalDirectory],
 ]) {
   if (typeof directory !== 'string' || directory.length === 0) {
     fail(`${label} must be a non-empty project-relative directory.`);
@@ -153,6 +159,24 @@ if (
 ) {
   fail(
     `source.walk.canvas must remain ${REQUIRED_WALK_CANVAS.width}x${REQUIRED_WALK_CANVAS.height}.`,
+  );
+}
+
+const sourceArrivalCanvasWidth = get(manifest, ['source', 'arrival', 'canvas', 'width']);
+const sourceArrivalCanvasHeight = get(manifest, ['source', 'arrival', 'canvas', 'height']);
+if (!isPositiveInteger(sourceArrivalCanvasWidth) || !isPositiveInteger(sourceArrivalCanvasHeight)) {
+  fail('source.arrival.canvas.width and source.arrival.canvas.height must be positive integers.');
+}
+if (get(manifest, ['source', 'arrival', 'canvas', 'coordinateSpace']) !== 'top-left') {
+  fail('source.arrival.canvas.coordinateSpace must be "top-left".');
+}
+if (
+  sourceArrivalCanvasWidth !== REQUIRED_ARRIVAL_CANVAS.width ||
+  sourceArrivalCanvasHeight !== REQUIRED_ARRIVAL_CANVAS.height
+) {
+  fail(
+    `source.arrival.canvas must remain ${REQUIRED_ARRIVAL_CANVAS.width}x` +
+      `${REQUIRED_ARRIVAL_CANVAS.height}.`,
   );
 }
 
@@ -279,6 +303,75 @@ if (
   );
 }
 
+const arrivalFrames = get(manifest, ['arrival', 'frames']);
+const arrivalEntries = [];
+if (!Array.isArray(arrivalFrames) || arrivalFrames.length !== ARRIVAL_FRAME_COUNT) {
+  fail(`arrival.frames must contain exactly ${ARRIVAL_FRAME_COUNT} frame URLs.`);
+} else {
+  for (const [index, source] of arrivalFrames.entries()) {
+    const label = `arrival.frames[${index}]`;
+    if (
+      typeof source !== 'string' ||
+      !source.startsWith('/pet/cat-v1/runtime/arrival/') ||
+      hasParentTraversal(source)
+    ) {
+      fail(`${label} must be a traversal-free /pet/cat-v1/runtime/arrival/ URL.`);
+      continue;
+    }
+    if (path.extname(source).toLowerCase() !== '.webp') {
+      fail(`${label} must reference an optimized WebP runtime asset.`);
+    }
+    arrivalEntries.push({ label, source });
+  }
+}
+
+const arrivalCanvasWidth = get(manifest, ['arrival', 'canvas', 'width']);
+const arrivalCanvasHeight = get(manifest, ['arrival', 'canvas', 'height']);
+if (!isPositiveInteger(arrivalCanvasWidth) || !isPositiveInteger(arrivalCanvasHeight)) {
+  fail('arrival.canvas.width and arrival.canvas.height must be positive integers.');
+}
+if (get(manifest, ['arrival', 'canvas', 'coordinateSpace']) !== 'top-left') {
+  fail('arrival.canvas.coordinateSpace must be "top-left".');
+}
+if (
+  arrivalCanvasWidth !== REQUIRED_ARRIVAL_CANVAS.width ||
+  arrivalCanvasHeight !== REQUIRED_ARRIVAL_CANVAS.height
+) {
+  fail(
+    `arrival.canvas must remain ${REQUIRED_ARRIVAL_CANVAS.width}x` +
+      `${REQUIRED_ARRIVAL_CANVAS.height}.`,
+  );
+}
+
+const arrivalDurationsMs = get(manifest, ['arrival', 'durationsMs']);
+if (!Array.isArray(arrivalDurationsMs) || arrivalDurationsMs.length !== ARRIVAL_FRAME_COUNT) {
+  fail(`arrival.durationsMs must contain exactly ${ARRIVAL_FRAME_COUNT} durations.`);
+} else {
+  for (const [index, duration] of arrivalDurationsMs.entries()) {
+    if (
+      !Number.isInteger(duration) ||
+      duration < MIN_ARRIVAL_FRAME_DURATION_MS ||
+      duration > MAX_ARRIVAL_FRAME_DURATION_MS
+    ) {
+      fail(
+        `arrival.durationsMs[${index}] must be an integer between ` +
+          `${MIN_ARRIVAL_FRAME_DURATION_MS} and ${MAX_ARRIVAL_FRAME_DURATION_MS}.`,
+      );
+    }
+  }
+}
+
+const arrivalFadeMs = get(manifest, ['arrival', 'reducedMotionFadeMs']);
+if (!Number.isInteger(arrivalFadeMs) || arrivalFadeMs < 160 || arrivalFadeMs > 220) {
+  fail('arrival.reducedMotionFadeMs must be an integer between 160 and 220.');
+}
+if (
+  get(manifest, ['arrival', 'walkOffset', 'x']) !== 0 ||
+  get(manifest, ['arrival', 'walkOffset', 'y']) !== 64
+) {
+  fail('arrival.walkOffset must be exactly { x: 0, y: 64 }.');
+}
+
 const duplicateWalkSources = walkEntries.filter(
   ({ source }, index) => walkEntries.findIndex((entry) => entry.source === source) !== index,
 );
@@ -286,9 +379,20 @@ for (const source of new Set(duplicateWalkSources.map((entry) => entry.source)))
   fail(`walk.frames URLs must be unique; duplicate found: ${source}`);
 }
 
+const duplicateArrivalSources = arrivalEntries.filter(
+  ({ source }, index) => arrivalEntries.findIndex((entry) => entry.source === source) !== index,
+);
+for (const source of new Set(duplicateArrivalSources.map((entry) => entry.source))) {
+  fail(`arrival.frames URLs must be unique; duplicate found: ${source}`);
+}
+
 const coreSources = new Set(layerEntries.map((entry) => entry.source));
 for (const { label, source } of walkEntries) {
   if (coreSources.has(source)) fail(`${label} must not reuse a core layer URL: ${source}`);
+}
+const usedRuntimeSources = new Set([...coreSources, ...walkEntries.map((entry) => entry.source)]);
+for (const { label, source } of arrivalEntries) {
+  if (usedRuntimeSources.has(source)) fail(`${label} must use a unique arrival URL: ${source}`);
 }
 
 const sourcePathForRuntime = (directory, runtimeSource) => {
@@ -310,6 +414,13 @@ const sourceWalkEntries =
         source: sourcePathForRuntime(sourceWalkDirectory, source),
       }))
     : [];
+const sourceArrivalEntries =
+  typeof sourceArrivalDirectory === 'string'
+    ? arrivalEntries.map(({ label, source }) => ({
+        label: `source.${label}`,
+        source: sourcePathForRuntime(sourceArrivalDirectory, source),
+      }))
+    : [];
 
 const duplicateSources = layerEntries.filter(
   ({ source }, index) => layerEntries.findIndex((entry) => entry.source === source) !== index,
@@ -320,10 +431,13 @@ for (const source of new Set(duplicateSources.map((entry) => entry.source))) {
 
 const missingRuntimeCoreFiles = [];
 const missingRuntimeWalkFiles = [];
+const missingRuntimeArrivalFiles = [];
 const missingSourceCoreFiles = [];
 const missingSourceWalkFiles = [];
+const missingSourceArrivalFiles = [];
 let coreBytes = 0;
 let walkBytes = 0;
+let arrivalBytes = 0;
 const assetGroups = [
   {
     entries: layerEntries,
@@ -356,12 +470,32 @@ const assetGroups = [
     scope: 'source',
   },
   {
+    entries: arrivalEntries,
+    expectedWidth: arrivalCanvasWidth,
+    expectedHeight: arrivalCanvasHeight,
+    format: 'webp',
+    kind: 'runtime arrival frame',
+    missing: missingRuntimeArrivalFiles,
+    budget: 'arrival',
+    scope: 'runtime',
+  },
+  {
     entries: sourceWalkEntries,
     expectedWidth: sourceWalkCanvasWidth,
     expectedHeight: sourceWalkCanvasHeight,
     format: 'png',
     kind: 'source walk frame',
     missing: missingSourceWalkFiles,
+    budget: null,
+    scope: 'source',
+  },
+  {
+    entries: sourceArrivalEntries,
+    expectedWidth: sourceArrivalCanvasWidth,
+    expectedHeight: sourceArrivalCanvasHeight,
+    format: 'png',
+    kind: 'source arrival frame',
+    missing: missingSourceArrivalFiles,
     budget: null,
     scope: 'source',
   },
@@ -411,6 +545,7 @@ for (const group of assetGroups) {
 
     if (group.budget === 'core') coreBytes += assetStat.size;
     if (group.budget === 'walk') walkBytes += assetStat.size;
+    if (group.budget === 'arrival') arrivalBytes += assetStat.size;
 
     let metadata;
     let stats;
@@ -446,8 +581,10 @@ for (const group of assetGroups) {
 const missingFiles = [
   ...missingRuntimeCoreFiles,
   ...missingRuntimeWalkFiles,
+  ...missingRuntimeArrivalFiles,
   ...missingSourceCoreFiles,
   ...missingSourceWalkFiles,
+  ...missingSourceArrivalFiles,
 ];
 if (manifest.ready && missingFiles.length > 0) {
   for (const { label, source } of missingFiles) fail(`${label} is missing: ${source}`);
@@ -455,7 +592,7 @@ if (manifest.ready && missingFiles.length > 0) {
 if (requireReady && !manifest.ready) {
   fail('manifest.ready is false; the formal asset renderer is intentionally disabled.');
 }
-const packageBytes = coreBytes + walkBytes;
+const packageBytes = coreBytes + walkBytes + arrivalBytes;
 if (coreBytes > CORE_BUDGET_BYTES) {
   const message =
     `The 19 core layers total ${(coreBytes / 1024).toFixed(0)} KiB, exceeding the ` +
@@ -484,13 +621,17 @@ if (!manifest.ready) {
     'Pet asset manifest is valid but remains in draft mode; missing ' +
       `${missingRuntimeCoreFiles.length}/${layerEntries.length} runtime core, ` +
       `${missingRuntimeWalkFiles.length}/${walkEntries.length} runtime walk, ` +
+      `${missingRuntimeArrivalFiles.length}/${arrivalEntries.length} runtime arrival, ` +
       `${missingSourceCoreFiles.length}/${sourceCoreEntries.length} source core, and ` +
-      `${missingSourceWalkFiles.length}/${sourceWalkEntries.length} source walk files.`,
+      `${missingSourceWalkFiles.length}/${sourceWalkEntries.length} source walk, and ` +
+      `${missingSourceArrivalFiles.length}/${sourceArrivalEntries.length} source arrival files.`,
   );
 } else {
   console.log(
-    `Pet asset package is ready: ${layerEntries.length + walkEntries.length} runtime WebP files ` +
-      `plus ${sourceCoreEntries.length + sourceWalkEntries.length} preserved PNG sources; ` +
+    `Pet asset package is ready: ${layerEntries.length + walkEntries.length + arrivalEntries.length} ` +
+      `runtime WebP files plus ` +
+      `${sourceCoreEntries.length + sourceWalkEntries.length + sourceArrivalEntries.length} ` +
+      `preserved PNG sources; ` +
       `${(packageBytes / 1024).toFixed(0)} KiB runtime total.`,
   );
 }

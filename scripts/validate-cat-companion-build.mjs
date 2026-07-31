@@ -124,6 +124,7 @@ const collectRuntimePaths = (value) => {
 };
 collectRuntimePaths(petManifest.layers);
 collectRuntimePaths(petManifest.walk?.frames);
+collectRuntimePaths(petManifest.arrival?.frames);
 
 const allowedPetFiles = new Set([
   'pet/cat-v1/manifest.json',

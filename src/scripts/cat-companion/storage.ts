@@ -1,4 +1,5 @@
-const HIDDEN_KEY = 'cat-companion:v1:hidden';
+// Versioned separately so this release starts visible even when v1 stored "hidden".
+const HIDDEN_KEY = 'cat-companion:v2:hidden';
 const SESSION_SEEN_KEY = 'cat-companion:v1:session-seen';
 const DIALOGUE_HISTORY_KEY = 'cat-companion:v1:dialogue-history';
 const RETURN_GREETING_KEY = 'cat-companion:v1:last-return-greeting';

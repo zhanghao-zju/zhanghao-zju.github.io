@@ -1,7 +1,8 @@
 # Cat companion asset contract
 
-The site keeps the CSS fallback renderer active while `manifest.json` has `"ready": false`.
-Do not enable the formal renderer until the complete package passes `npm run check:pet:ready`.
+The site starts in a non-rendering loading state. The CSS fallback is enabled only when the
+manifest is not ready or a formal asset fails to load or validate. Do not enable the formal
+renderer until the complete package passes `npm run check:pet:ready`.
 
 ## Source and runtime canvases
 
@@ -13,7 +14,8 @@ Do not enable the formal renderer until the complete package passes `npm run che
 - Never trim, independently crop, recenter, or independently resize a source or runtime layer.
 - Generate every runtime layer together with `npm run prepare:pet-runtime`. The script uses the
   same Lanczos resize for all core layers, lossless WebP for eye/eyelid/mouth patches, and
-  quality-88 WebP with alpha quality 100 for the remaining artwork.
+  quality-88 WebP with alpha quality 100 for the remaining core and walk artwork. Arrival frames
+  use quality 86 with alpha quality 100 to preserve a safe margin under the full-package budget.
 - Normalized anchors and hit areas apply unchanged after uniform resizing.
 
 ## Required layers
@@ -42,13 +44,24 @@ not expose seams or the original mouth underneath.
   sequence is optimized, transform every frame together and update `walk.canvas` in the same
   change.
 - `walk.frameDurationMs` must remain between 90 and 140 milliseconds; `110` milliseconds is the
-  current playback contract.
+  previous playback contract; the arrival sequence uses `135` milliseconds per walk frame.
+
+## Arrival sequence
+
+- Preserve exactly ten `384x576` PNG source frames under `source.arrival.directory`; runtime
+  WebP frames live under `runtime/arrival/` and match `arrival.canvas`.
+- Composite each `384x512` walk frame into the arrival coordinate space at `(0, 64)` before
+  playing the ten arrival frames with `arrival.durationsMs`.
+- The sequence is slow walk, blue-book magic, jump, landing, and stable sitting. Frame 10 must
+  match the neutral layered static composite so the handoff to live layers has no visible jump.
+- With reduced motion, skip directly to frame 10 and fade into the live composite over the
+  configured `arrival.reducedMotionFadeMs` interval.
 
 ## Activation checklist
 
-1. Export all 19 PNG source layers at `source.canvas` and all 8 source walk frames at
-   `source.walk.canvas`.
-2. Run `npm run prepare:pet-runtime` to create the 27 WebP runtime files without overwriting the
+1. Export all 19 PNG source layers at `source.canvas`, all 8 source walk frames at
+   `source.walk.canvas`, and all 10 source arrival frames at `source.arrival.canvas`.
+2. Run `npm run prepare:pet-runtime` to create the 37 WebP runtime files without overwriting the
    PNG sources.
 3. Run `npm run check:pet` while iterating. It checks both source and runtime sets for file type,
    dimensions, alpha, non-empty pixels, and transparent canvas area.

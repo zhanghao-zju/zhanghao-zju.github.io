@@ -14,6 +14,7 @@ const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const REQUIRED_SOURCE_CANVAS = { width: 1024, height: 1536 };
 const REQUIRED_RUNTIME_CANVAS = { width: 384, height: 576 };
 const REQUIRED_WALK_CANVAS = { width: 384, height: 512 };
+const REQUIRED_ARRIVAL_CANVAS = { width: 384, height: 576 };
 
 const layerFields = [
   ['body'],
@@ -95,7 +96,7 @@ const assertSource = async (sourcePath, width, height) => {
   if (alpha.min === 255) throw new Error(`${sourcePath} has no transparent canvas area`);
 };
 
-const convert = async ({ source, destination, width, height, resize, lossless }) => {
+const convert = async ({ source, destination, width, height, resize, lossless, quality = 88 }) => {
   await assertSource(source, resize.sourceWidth, resize.sourceHeight);
   await mkdir(path.dirname(destination), { recursive: true });
   const canonicalDestinationDirectory = await realpath(path.dirname(destination));
@@ -115,7 +116,7 @@ const convert = async ({ source, destination, width, height, resize, lossless })
   pipeline = pipeline.toColourspace('srgb');
   pipeline = lossless
     ? pipeline.webp({ lossless: true, effort: 6 })
-    : pipeline.webp({ quality: 88, alphaQuality: 100, effort: 6, smartSubsample: true });
+    : pipeline.webp({ quality, alphaQuality: 100, effort: 6, smartSubsample: true });
 
   await pipeline.toFile(temporary);
   await rename(temporary, destination);
@@ -150,8 +151,11 @@ assertCanvas('source.canvas', manifest.source?.canvas, REQUIRED_SOURCE_CANVAS);
 assertCanvas('canvas', manifest.canvas, REQUIRED_RUNTIME_CANVAS);
 assertCanvas('source.walk.canvas', manifest.source?.walk?.canvas, REQUIRED_WALK_CANVAS);
 assertCanvas('walk.canvas', manifest.walk?.canvas, REQUIRED_WALK_CANVAS);
+assertCanvas('source.arrival.canvas', manifest.source?.arrival?.canvas, REQUIRED_ARRIVAL_CANVAS);
+assertCanvas('arrival.canvas', manifest.arrival?.canvas, REQUIRED_ARRIVAL_CANVAS);
 resolveProjectAsset(manifest.source?.coreDirectory);
 resolveProjectAsset(manifest.source?.walk?.directory);
+resolveProjectAsset(manifest.source?.arrival?.directory);
 
 const runtimeCoreEntries = layerFields.map((keys) => ({
   key: keys.join('.'),
@@ -159,6 +163,11 @@ const runtimeCoreEntries = layerFields.map((keys) => ({
 }));
 const runtimeWalkEntries = manifest.walk.frames.map((runtime, index) => ({
   key: `walk-${String(index + 1).padStart(2, '0')}`,
+  runtime,
+}));
+const runtimeArrivalEntries = manifest.arrival.frames.map((runtime, index) => ({
+  key: `arrival-${String(index + 1).padStart(2, '0')}`,
+  index,
   runtime,
 }));
 
@@ -203,10 +212,32 @@ for (const entry of runtimeWalkEntries) {
   });
 }
 
-const packageBytes = coreBytes + walkBytes;
+let arrivalBytes = 0;
+for (const entry of runtimeArrivalEntries) {
+  const sourceReference = sourceForRuntime(manifest.source.arrival.directory, entry.runtime);
+  const source = resolveProjectAsset(sourceReference);
+  const destination = resolveRuntimeAsset(entry.runtime);
+  arrivalBytes += await convert({
+    source,
+    destination,
+    width: manifest.arrival.canvas.width,
+    height: manifest.arrival.canvas.height,
+    resize: {
+      enabled: false,
+      sourceWidth: manifest.source.arrival.canvas.width,
+      sourceHeight: manifest.source.arrival.canvas.height,
+    },
+    lossless: false,
+    quality: 86,
+  });
+}
+
+const packageBytes = coreBytes + walkBytes + arrivalBytes;
 console.log(
-  `Prepared ${runtimeCoreEntries.length + runtimeWalkEntries.length} runtime WebP assets: ` +
+  `Prepared ${runtimeCoreEntries.length + runtimeWalkEntries.length + runtimeArrivalEntries.length} ` +
+    'runtime WebP assets: ' +
     `${(coreBytes / 1024).toFixed(1)} KiB core, ${(walkBytes / 1024).toFixed(1)} KiB walk, ` +
+    `${(arrivalBytes / 1024).toFixed(1)} KiB arrival, ` +
     `${(packageBytes / 1024).toFixed(1)} KiB total.`,
 );
 if (coreBytes > 300 * 1024 || packageBytes > 800 * 1024) {

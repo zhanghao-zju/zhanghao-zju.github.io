@@ -16,6 +16,14 @@
         "coordinateSpace": "top-left"
       },
       "directory": "assets/pet-source/cat-v1/walk"
+    },
+    "arrival": {
+      "canvas": {
+        "width": 384,
+        "height": 576,
+        "coordinateSpace": "top-left"
+      },
+      "directory": "assets/pet-source/cat-v1/arrival/frames"
     }
   },
   "canvas": {
@@ -95,7 +103,32 @@
       "/pet/cat-v1/runtime/walk/walk-07.webp",
       "/pet/cat-v1/runtime/walk/walk-08.webp"
     ],
-    "frameDurationMs": 110
+    "frameDurationMs": 135
+  },
+  "arrival": {
+    "canvas": {
+      "width": 384,
+      "height": 576,
+      "coordinateSpace": "top-left"
+    },
+    "walkOffset": {
+      "x": 0,
+      "y": 64
+    },
+    "frames": [
+      "/pet/cat-v1/runtime/arrival/arrival-01.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-02.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-03.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-04.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-05.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-06.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-07.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-08.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-09.webp",
+      "/pet/cat-v1/runtime/arrival/arrival-10.webp"
+    ],
+    "durationsMs": [120, 105, 95, 90, 90, 105, 110, 120, 100, 160],
+    "reducedMotionFadeMs": 190
   },
   "anchors": {
     "units": "normalized",
