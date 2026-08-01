@@ -55,6 +55,7 @@
     "tailMotion": true
   },
   "layers": {
+    "book": "/pet/cat-v1/runtime/book.webp",
     "body": "/pet/cat-v1/runtime/body.webp",
     "head": "/pet/cat-v1/runtime/head.webp",
     "earLeft": "/pet/cat-v1/runtime/ear-left.webp",
@@ -86,6 +87,14 @@
     "paw": "/pet/cat-v1/runtime/paw.webp",
     "tail": "/pet/cat-v1/runtime/tail.webp",
     "shadow": "/pet/cat-v1/runtime/shadow.webp"
+  },
+  "bookMotion": {
+    "transformOrigin": {
+      "x": 0.522461,
+      "y": 0.708333
+    },
+    "maxRotationDeg": 1.5,
+    "maxLiftPx": 1.5
   },
   "walk": {
     "canvas": {

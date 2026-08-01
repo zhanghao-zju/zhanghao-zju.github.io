@@ -5,6 +5,7 @@ import CatCompanion from '../components/CatCompanion.astro';
 const {
   title = '个人主页',
   description = '个人技术博客与成长记录。',
+  wide = false,
 } = Astro.props;
 
 const navItems = [
@@ -30,7 +31,7 @@ const isActive = (href) => {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
   </head>
-  <body>
+  <body class:list={{ 'layout-wide': wide }}>
     <header class="site-header">
       <a class="site-title" href="/">
         <img class="site-avatar" src="/avatar.jpg" alt="" />
@@ -77,6 +78,7 @@ const isActive = (href) => {
   }
 
   body {
+    --site-shell-max-width: 1180px;
     margin: 0;
     min-height: 100vh;
     background:
@@ -84,6 +86,10 @@ const isActive = (href) => {
       linear-gradient(180deg, #ffffff 0%, var(--bg) 280px);
     color: var(--text);
     line-height: 1.72;
+  }
+
+  body.layout-wide {
+    --site-shell-max-width: 1320px;
   }
 
   a {
@@ -97,8 +103,19 @@ const isActive = (href) => {
 
   .site-header,
   main {
-    width: min(100% - 40px, 1180px);
+    width: min(100% - 40px, var(--site-shell-max-width));
     margin: 0 auto;
+  }
+
+  @media (min-width: 1400px) {
+    body.layout-wide .site-header,
+    body.layout-wide main {
+      margin-right: auto;
+      margin-left: max(
+        20px,
+        calc((100% - var(--site-shell-max-width)) / 2 + 16px)
+      );
+    }
   }
 
   .site-header {

@@ -110,21 +110,34 @@ if (!Array.isArray(lines)) {
   }
 }
 
-const runtimePetFiles = new Set();
-const collectRuntimePaths = (value) => {
-  if (typeof value === 'string') {
-    if (value.startsWith('/pet/cat-v1/runtime/')) runtimePetFiles.add(value.replace(/^\/+/, ''));
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach(collectRuntimePaths);
-    return;
-  }
-  if (value && typeof value === 'object') Object.values(value).forEach(collectRuntimePaths);
-};
-collectRuntimePaths(petManifest.layers);
-collectRuntimePaths(petManifest.walk?.frames);
-collectRuntimePaths(petManifest.arrival?.frames);
+const coreRuntimePaths = [
+  petManifest.layers?.shadow,
+  petManifest.layers?.book,
+  petManifest.layers?.tail,
+  petManifest.layers?.body,
+  petManifest.layers?.head,
+  petManifest.layers?.earLeft,
+  petManifest.layers?.earRight,
+  petManifest.layers?.eyeBases?.left,
+  petManifest.layers?.eyeBases?.right,
+  petManifest.layers?.pupils?.left,
+  petManifest.layers?.pupils?.right,
+  petManifest.layers?.eyelids?.half?.left,
+  petManifest.layers?.eyelids?.half?.right,
+  petManifest.layers?.eyelids?.closed?.left,
+  petManifest.layers?.eyelids?.closed?.right,
+  petManifest.layers?.mouths?.closed,
+  petManifest.layers?.mouths?.small,
+  petManifest.layers?.mouths?.open,
+  petManifest.layers?.mouths?.smile,
+  petManifest.layers?.paw,
+];
+const runtimeUrls = [...coreRuntimePaths, ...(petManifest.walk?.frames ?? []), ...(petManifest.arrival?.frames ?? [])];
+const runtimePetFiles = new Set(
+  runtimeUrls
+    .filter((value) => typeof value === 'string' && value.startsWith('/pet/cat-v1/runtime/'))
+    .map((value) => value.replace(/^\/+/, '')),
+);
 
 const allowedPetFiles = new Set([
   'pet/cat-v1/manifest.json',
@@ -137,6 +150,16 @@ const deployedPetFiles = builtFiles
 const deploymentErrors = deployedPetFiles
   .filter((relativePath) => !allowedPetFiles.has(relativePath))
   .map((relativePath) => `Disallowed production or QA pet asset was deployed: ${relativePath}`);
+if (runtimeUrls.length !== 38 || runtimePetFiles.size !== 38) {
+  deploymentErrors.push(
+    `The production pet whitelist must contain exactly 38 unique runtime files; got ${runtimePetFiles.size}.`,
+  );
+}
+for (const requiredPath of runtimePetFiles) {
+  if (!deployedPetFiles.includes(requiredPath)) {
+    deploymentErrors.push(`Required production pet asset is missing from dist: ${requiredPath}`);
+  }
+}
 
 const errors = [...pageErrors, ...dialogueErrors, ...deploymentErrors];
 if (errors.length > 0) {

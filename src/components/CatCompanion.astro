@@ -26,28 +26,37 @@ const pagePath = Astro.url.pathname;
   <div
     class="cat-companion__stage"
     data-pet-stage
+    data-pet-drag-handle
     role="button"
     tabindex="0"
     aria-label="摸摸猫咪"
   >
-    <div class="cat-companion__character" data-pet-character aria-hidden="true">
-      <div class="cat-companion__walk" data-pet-walk-root aria-hidden="true"></div>
-      <div class="cat-companion__asset-root" data-pet-asset-root aria-hidden="true"></div>
-      <span class="cat-companion__part cat-companion__tail" data-pet-part="tail"></span>
-      <span class="cat-companion__part cat-companion__body" data-pet-part="body"></span>
-      <span class="cat-companion__part cat-companion__paw" data-pet-part="paw"></span>
-      <div class="cat-companion__head-group" data-pet-head-group>
-        <span class="cat-companion__part cat-companion__ear cat-companion__ear--left" data-pet-part="ear-left"></span>
-        <span class="cat-companion__part cat-companion__ear cat-companion__ear--right" data-pet-part="ear-right"></span>
-        <span class="cat-companion__part cat-companion__head" data-pet-part="head"></span>
-        <span class="cat-companion__part cat-companion__eye cat-companion__eye--left" data-pet-part="eye-left"></span>
-        <span class="cat-companion__part cat-companion__eye cat-companion__eye--right" data-pet-part="eye-right"></span>
-        <span class="cat-companion__part cat-companion__pupil cat-companion__pupil--left" data-pet-part="pupil-left"></span>
-        <span class="cat-companion__part cat-companion__pupil cat-companion__pupil--right" data-pet-part="pupil-right"></span>
-        <span class="cat-companion__part cat-companion__eyelid cat-companion__eyelid--left" data-pet-part="eyelid-left"></span>
-        <span class="cat-companion__part cat-companion__eyelid cat-companion__eyelid--right" data-pet-part="eyelid-right"></span>
-        <span class="cat-companion__part cat-companion__nose" data-pet-part="nose"></span>
-        <span class="cat-companion__part cat-companion__mouth" data-pet-part="mouth"></span>
+    <div class="cat-companion__drift" data-pet-drift>
+      <div class="cat-companion__reaction-shell" data-pet-reaction-shell>
+        <div class="cat-companion__breathe" data-pet-breathe>
+          <div class="cat-companion__character" data-pet-character aria-hidden="true">
+            <div class="cat-companion__walk" data-pet-walk-root aria-hidden="true"></div>
+            <div class="cat-companion__asset-root" data-pet-asset-root aria-hidden="true"></div>
+            <span class="cat-companion__part cat-companion__tail" data-pet-part="tail"></span>
+            <span class="cat-companion__part cat-companion__body" data-pet-part="body"></span>
+            <span class="cat-companion__part cat-companion__paw" data-pet-part="paw"></span>
+            <div class="cat-companion__head-group" data-pet-head-group>
+              <div class="cat-companion__head-motion" data-pet-head-motion>
+                <span class="cat-companion__part cat-companion__ear cat-companion__ear--left" data-pet-part="ear-left"></span>
+                <span class="cat-companion__part cat-companion__ear cat-companion__ear--right" data-pet-part="ear-right"></span>
+                <span class="cat-companion__part cat-companion__head" data-pet-part="head"></span>
+                <span class="cat-companion__part cat-companion__eye cat-companion__eye--left" data-pet-part="eye-left"></span>
+                <span class="cat-companion__part cat-companion__eye cat-companion__eye--right" data-pet-part="eye-right"></span>
+                <span class="cat-companion__part cat-companion__pupil cat-companion__pupil--left" data-pet-part="pupil-left"></span>
+                <span class="cat-companion__part cat-companion__pupil cat-companion__pupil--right" data-pet-part="pupil-right"></span>
+                <span class="cat-companion__part cat-companion__eyelid cat-companion__eyelid--left" data-pet-part="eyelid-left"></span>
+                <span class="cat-companion__part cat-companion__eyelid cat-companion__eyelid--right" data-pet-part="eyelid-right"></span>
+                <span class="cat-companion__part cat-companion__nose" data-pet-part="nose"></span>
+                <span class="cat-companion__part cat-companion__mouth" data-pet-part="mouth"></span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

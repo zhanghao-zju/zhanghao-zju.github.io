@@ -5,8 +5,10 @@ import { PetStateMachine } from './state-machine';
 import {
   readHiddenPreference,
   readLastReturnGreetingAt,
+  readPetPosition,
   writeHiddenPreference,
   writeLastReturnGreetingAt,
+  writePetPosition,
 } from './storage';
 import type { PetLine, PetMood, PetState, PetTrigger, SpeechRequest, StateLease } from './types';
 
@@ -36,6 +38,7 @@ interface AssetManifest {
   displaySizes: Record<'desktop' | 'tablet' | 'mobile', { width: number; height: number }>;
   layers: {
     body: string;
+    book: string;
     head: string;
     earLeft: string;
     earRight: string;
@@ -49,6 +52,11 @@ interface AssetManifest {
     paw: string;
     tail: string;
     shadow: string;
+  };
+  bookMotion: {
+    transformOrigin: { x: number; y: number };
+    maxRotationDeg: number;
+    maxLiftPx: number;
   };
   walk: {
     canvas: { width: number; height: number; coordinateSpace: 'top-left' };
@@ -134,6 +142,16 @@ class CatCompanionController {
   #scrolling = false;
   #touchPrimed = false;
   #lastToyPawAt = 0;
+  #dragPointerId: number | null = null;
+  #dragStartX = 0;
+  #dragStartY = 0;
+  #dragRootLeft = 0;
+  #dragRootTop = 0;
+  #dragThreshold = 6;
+  #dragging = false;
+  #suppressStageClickUntil = 0;
+  #positionRestored = false;
+  #safeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 
   constructor(root: HTMLElement) {
     this.#root = root;
@@ -167,6 +185,8 @@ class CatCompanionController {
     this.#root.dataset.reducedMotion = String(this.#reducedMotionQuery.matches);
     this.#root.dataset.mouth = 'closed';
     this.#bubble.hidden = true;
+    this.#measureSafeArea();
+    requestAnimationFrame(() => this.#restorePosition());
     void this.#loadAssetRenderer();
   }
 
@@ -189,7 +209,12 @@ class CatCompanionController {
     const signal = this.#abort.signal;
 
     window.addEventListener('pointermove', this.#onPointerMove, { passive: true, signal });
-    window.addEventListener('resize', () => this.#gaze.updateBounds(), { passive: true, signal });
+    window.addEventListener('pointermove', this.#onDragPointerMove, { signal });
+    window.addEventListener('pointerup', this.#onDragPointerUp, { signal });
+    window.addEventListener('pointercancel', this.#onDragPointerCancel, { signal });
+    window.addEventListener('resize', this.#onViewportChange, { passive: true, signal });
+    window.visualViewport?.addEventListener('resize', this.#onViewportChange, { passive: true, signal });
+    window.visualViewport?.addEventListener('scroll', this.#onViewportChange, { passive: true, signal });
     window.addEventListener('scroll', this.#onScroll, { passive: true, signal });
     window.addEventListener('pagehide', this.#onPageHide, { signal });
     window.addEventListener('pageshow', this.#onPageShow, { signal });
@@ -201,6 +226,8 @@ class CatCompanionController {
     this.#root.addEventListener('focusout', this.#onFocusOut, { signal });
 
     this.#stage.addEventListener('click', this.#onStageClick, { signal });
+    this.#stage.addEventListener('pointerdown', this.#onDragPointerDown, { signal });
+    this.#stage.addEventListener('lostpointercapture', this.#onDragPointerCancel, { signal });
     this.#stage.addEventListener('keydown', this.#onStageKeyDown, { signal });
     this.#toyButton.addEventListener('click', () => this.#toggleToy(), { signal });
     this.#toyButton.addEventListener('keydown', this.#onToyButtonKeyDown, { signal });
@@ -224,6 +251,7 @@ class CatCompanionController {
   }
 
   #setHidden(hidden: boolean, persist: boolean): void {
+    if (hidden) this.#cancelDrag();
     this.#hidden = hidden;
     this.#root.dataset.hidden = String(hidden);
     this.#stage.setAttribute('aria-hidden', String(hidden));
@@ -262,7 +290,7 @@ class CatCompanionController {
   }
 
   #onPointerMove = (event: PointerEvent): void => {
-    if (this.#hidden || document.hidden || event.pointerType === 'touch') return;
+    if (this.#hidden || this.#dragPointerId !== null || document.hidden || event.pointerType === 'touch') return;
     this.#gaze.pointTo(event.clientX, event.clientY);
 
     if (this.#toyActive && !this.#reducedMotionQuery.matches) {
@@ -316,6 +344,12 @@ class CatCompanionController {
 
   #onStageClick = (event: MouseEvent): void => {
     if (this.#hidden) return;
+    if (Date.now() < this.#suppressStageClickUntil) {
+      this.#suppressStageClickUntil = 0;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     if (this.#coarsePointer) {
       this.#gaze.pointTo(event.clientX, event.clientY);
       this.#openTouchToolbar();
@@ -349,6 +383,147 @@ class CatCompanionController {
     this.#handlePetInteraction(clickedNose || noseDistance < 1 ? 'pet-nose' : 'pet-head');
   };
 
+  #onDragPointerDown = (event: PointerEvent): void => {
+    if (
+      this.#hidden ||
+      this.#root.dataset.arrivalPhase ||
+      this.#root.dataset.tocOpen === 'true' ||
+      !event.isPrimary ||
+      (event.pointerType === 'mouse' && event.button !== 0) ||
+      !(event.target instanceof Element) ||
+      !event.target.closest('[data-pet-character]')
+    ) return;
+    const rootBounds = this.#root.getBoundingClientRect();
+    this.#dragPointerId = event.pointerId;
+    this.#dragStartX = event.clientX;
+    this.#dragStartY = event.clientY;
+    this.#dragRootLeft = rootBounds.left;
+    this.#dragRootTop = rootBounds.top;
+    this.#dragThreshold = event.pointerType === 'touch' ? 9 : 6;
+    this.#root.dataset.dragState = 'candidate';
+    try {
+      this.#stage.setPointerCapture(event.pointerId);
+    } catch {
+      // Window-level pointer listeners keep drag tracking reliable if capture is unavailable.
+    }
+  };
+
+  #onDragPointerMove = (event: PointerEvent): void => {
+    if (event.pointerId !== this.#dragPointerId) return;
+    const dx = event.clientX - this.#dragStartX;
+    const dy = event.clientY - this.#dragStartY;
+    if (!this.#dragging && Math.hypot(dx, dy) < this.#dragThreshold) return;
+    if (!this.#dragging) {
+      this.#dragging = true;
+      this.#suppressStageClickUntil = Date.now() + 1_000;
+      this.#root.dataset.dragState = 'dragging';
+      this.#stopToy(false);
+      this.#gaze.stop();
+    }
+    event.preventDefault();
+    this.#setRootPosition(this.#dragRootLeft + dx, this.#dragRootTop + dy, false);
+  };
+
+  #onDragPointerUp = (event: PointerEvent): void => {
+    if (event.pointerId !== this.#dragPointerId) return;
+    this.#finishDrag(this.#dragging);
+  };
+
+  #onDragPointerCancel = (event: PointerEvent): void => {
+    if (event.pointerId !== this.#dragPointerId) return;
+    this.#finishDrag(this.#dragging);
+  };
+
+  #finishDrag(persist: boolean): void {
+    const pointerId = this.#dragPointerId;
+    this.#dragPointerId = null;
+    if (pointerId !== null && this.#stage.hasPointerCapture(pointerId)) {
+      this.#stage.releasePointerCapture(pointerId);
+    }
+    if (persist) {
+      const bounds = this.#root.getBoundingClientRect();
+      writePetPosition({ x: bounds.left, y: bounds.top });
+      this.#positionBubble();
+    }
+    this.#dragging = false;
+    delete this.#root.dataset.dragState;
+    if (!this.#hidden && !document.hidden) {
+      this.#gaze.updateBounds();
+      this.#gaze.start();
+    }
+  }
+
+  #cancelDrag(): void {
+    this.#finishDrag(false);
+  }
+
+  #viewportBounds(): { left: number; top: number; right: number; bottom: number } {
+    const viewport = window.visualViewport;
+    const left = viewport?.offsetLeft ?? 0;
+    const top = viewport?.offsetTop ?? 0;
+    return {
+      left: left + Math.max(8, this.#safeInsets.left),
+      top: top + Math.max(8, this.#safeInsets.top),
+      right: left + (viewport?.width ?? window.innerWidth) - Math.max(8, this.#safeInsets.right),
+      bottom: top + (viewport?.height ?? window.innerHeight) - Math.max(8, this.#safeInsets.bottom),
+    };
+  }
+
+  #measureSafeArea(): void {
+    const probe = document.createElement('div');
+    probe.style.cssText =
+      'position:fixed;visibility:hidden;pointer-events:none;' +
+      'padding:env(safe-area-inset-top) env(safe-area-inset-right) ' +
+      'env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.append(probe);
+    const style = getComputedStyle(probe);
+    this.#safeInsets = {
+      top: Number.parseFloat(style.paddingTop) || 0,
+      right: Number.parseFloat(style.paddingRight) || 0,
+      bottom: Number.parseFloat(style.paddingBottom) || 0,
+      left: Number.parseFloat(style.paddingLeft) || 0,
+    };
+    probe.remove();
+  }
+
+  #setRootPosition(left: number, top: number, persist: boolean): void {
+    this.#root.style.left = `${left}px`;
+    this.#root.style.top = `${top}px`;
+    this.#root.style.right = 'auto';
+    this.#root.style.bottom = 'auto';
+    const character = this.#character.getBoundingClientRect();
+    const root = this.#root.getBoundingClientRect();
+    const viewport = this.#viewportBounds();
+    const dx = Math.min(viewport.right - character.right, Math.max(viewport.left - character.left, 0));
+    const clampedDx = character.right > viewport.right ? viewport.right - character.right : dx;
+    const dy = Math.min(viewport.bottom - character.bottom, Math.max(viewport.top - character.top, 0));
+    const clampedDy = character.bottom > viewport.bottom ? viewport.bottom - character.bottom : dy;
+    const nextLeft = root.left + clampedDx;
+    const nextTop = root.top + clampedDy;
+    this.#root.style.left = `${nextLeft}px`;
+    this.#root.style.top = `${nextTop}px`;
+    this.#root.dataset.positionSource = 'user';
+    if (persist) writePetPosition({ x: nextLeft, y: nextTop });
+    this.#gaze.updateBounds();
+  }
+
+  #restorePosition(): void {
+    if (this.#positionRestored) return;
+    this.#positionRestored = true;
+    const position = readPetPosition();
+    if (position) this.#setRootPosition(position.x, position.y, false);
+  }
+
+  #onViewportChange = (): void => {
+    this.#measureSafeArea();
+    if (this.#root.dataset.positionSource === 'user') {
+      const bounds = this.#root.getBoundingClientRect();
+      this.#setRootPosition(bounds.left, bounds.top, true);
+    }
+    this.#gaze.updateBounds();
+    this.#positionBubble();
+  };
+
   #onStageKeyDown = (event: KeyboardEvent): void => {
     if ((event.key !== 'Enter' && event.key !== ' ') || event.repeat) return;
     event.preventDefault();
@@ -370,6 +545,7 @@ class CatCompanionController {
   #onMobileTocToggle = (): void => {
     if (!window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches) return;
     if (this.#mobileToc?.open) {
+      this.#cancelDrag();
       this.#root.dataset.tocOpen = 'true';
       if (!this.#hidden) {
         this.#hiddenForToc = true;
@@ -471,6 +647,7 @@ class CatCompanionController {
   };
 
   #onRecall = (): void => {
+    this.#cancelDrag();
     const shouldMoveFocus = document.activeElement === this.#recallButton;
     if (this.#mobileToc?.open && window.matchMedia(ARTICLE_TOC_OVERLAY_QUERY).matches) {
       this.#mobileToc.open = false;
@@ -515,6 +692,7 @@ class CatCompanionController {
 
   #onVisibilityChange = (): void => {
     if (document.hidden) {
+      this.#cancelDrag();
       this.#stopArrival();
       this.#hiddenAt = Date.now();
       this.#root.dataset.paused = 'true';
@@ -557,6 +735,7 @@ class CatCompanionController {
   };
 
   #onPageHide = (event: PageTransitionEvent): void => {
+    this.#cancelDrag();
     if (!event.persisted) {
       this.destroy();
       return;
@@ -657,6 +836,7 @@ class CatCompanionController {
     this.#root.dataset.mouth = 'closed';
     this.#bubbleText.textContent = '';
     this.#bubble.hidden = false;
+    requestAnimationFrame(() => this.#positionBubble());
     if (request.announce) this.#liveRegion.textContent = line.text;
 
     try {
@@ -679,6 +859,7 @@ class CatCompanionController {
           await wait(34, signal);
         }
         this.#root.dataset.mouth = 'closed';
+        this.#positionBubble();
       }
 
       await wait(Math.max(1_150, Math.min(2_400, line.text.length * 105)), signal);
@@ -696,6 +877,46 @@ class CatCompanionController {
       }
       this.#machine.release(stateLease, this.#toyActive ? 'playing' : this.#restingState());
     }
+  }
+
+  #positionBubble(): void {
+    if (this.#bubble.hidden || this.#hidden || this.#root.dataset.tocOpen === 'true') return;
+    const viewport = this.#viewportBounds();
+    const character = this.#character.getBoundingClientRect();
+    const bubble = this.#bubble.getBoundingClientRect();
+    const gap = 12;
+    const candidates = [
+      { side: 'right', vertical: 'above', left: character.right + gap, top: character.top - bubble.height - gap },
+      { side: 'left', vertical: 'above', left: character.left - bubble.width - gap, top: character.top - bubble.height - gap },
+      { side: 'right', vertical: 'below', left: character.right + gap, top: character.bottom + gap },
+      { side: 'left', vertical: 'below', left: character.left - bubble.width - gap, top: character.bottom + gap },
+    ] as const;
+    const toc = this.#mobileToc?.open ? this.#mobileToc.getBoundingClientRect() : null;
+    const overflowScore = (candidate: (typeof candidates)[number]) => {
+      const right = candidate.left + bubble.width;
+      const bottom = candidate.top + bubble.height;
+      let score =
+        Math.max(0, viewport.left - candidate.left) +
+        Math.max(0, right - viewport.right) +
+        Math.max(0, viewport.top - candidate.top) +
+        Math.max(0, bottom - viewport.bottom);
+      if (toc) {
+        const overlapWidth = Math.max(0, Math.min(right, toc.right) - Math.max(candidate.left, toc.left));
+        const overlapHeight = Math.max(0, Math.min(bottom, toc.bottom) - Math.max(candidate.top, toc.top));
+        score += overlapWidth * overlapHeight;
+      }
+      return score;
+    };
+    const chosen = candidates.reduce((best, candidate) =>
+      overflowScore(candidate) < overflowScore(best) ? candidate : best,
+    );
+    const left = Math.min(viewport.right - bubble.width, Math.max(viewport.left, chosen.left));
+    const top = Math.min(viewport.bottom - bubble.height, Math.max(viewport.top, chosen.top));
+    this.#bubble.style.setProperty('--pet-bubble-x', `${left}px`);
+    this.#bubble.style.setProperty('--pet-bubble-y', `${top}px`);
+    this.#bubble.dataset.bubbleSide = chosen.side;
+    this.#bubble.dataset.bubbleVertical = chosen.vertical;
+    this.#bubble.dataset.bubbleClamped = String(left !== chosen.left || top !== chosen.top);
   }
 
   #cancelSpeech(): void {
@@ -833,6 +1054,7 @@ class CatCompanionController {
 
       const layerEntries = [
         ['shadow', manifest.layers.shadow],
+        ['book', manifest.layers.book],
         ['tail', manifest.layers.tail],
         ['body', manifest.layers.body],
         ['head', manifest.layers.head],
@@ -919,6 +1141,9 @@ class CatCompanionController {
       const fragment = document.createDocumentFragment();
       const headGroup = document.createElement('div');
       headGroup.dataset.assetHeadGroup = '';
+      const headMotion = document.createElement('div');
+      headMotion.dataset.assetHeadMotion = '';
+      headGroup.append(headMotion);
       const headParts = new Set([
         'head',
         'ear-left',
@@ -944,7 +1169,7 @@ class CatCompanionController {
             fragment.append(headGroup);
             headGroupMounted = true;
           }
-          headGroup.append(image);
+          headMotion.append(image);
         } else {
           fragment.append(image);
         }
@@ -982,6 +1207,7 @@ class CatCompanionController {
       return;
     }
 
+    this.#gaze.stop();
     this.#pendingArrival = false;
     const frameDuration = Math.max(90, Math.min(140, this.#walkFrameDurationMs));
     this.#root.style.setProperty('--pet-walk-duration', `${frameDuration * this.#walkFrames.length}ms`);
@@ -1050,6 +1276,10 @@ class CatCompanionController {
   #finishRecall(): void {
     if (!this.#pendingRecallSpeech || this.#hidden) return;
     this.#pendingRecallSpeech = false;
+    if (!document.hidden) {
+      this.#gaze.updateBounds();
+      this.#gaze.start();
+    }
     this.#requestSpeech({ trigger: 'recall', priority: 90, announce: true });
   }
 
@@ -1070,6 +1300,9 @@ class CatCompanionController {
     setOrigin('--pet-eye-right-origin', manifest.anchors.eyeRight);
     setOrigin('--pet-paw-origin', manifest.anchors.paw);
     setOrigin('--pet-tail-origin', manifest.anchors.tail);
+    setOrigin('--pet-book-origin', manifest.bookMotion.transformOrigin);
+    this.#root.style.setProperty('--pet-book-max-turn', `${manifest.bookMotion.maxRotationDeg}deg`);
+    this.#root.style.setProperty('--pet-book-max-lift', `${manifest.bookMotion.maxLiftPx}px`);
     this.#noseHitArea = manifest.hitAreas.nose;
   }
 }

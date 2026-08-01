@@ -6,6 +6,10 @@
   font-display: swap;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .article-reading-layout {
   --sakura: #ff7096;
   --sakura-deep: #e91e63;
@@ -34,7 +38,7 @@
 .article-page {
   min-width: 0;
   width: 100%;
-  max-width: 950px;
+  max-width: 1040px;
   margin: 0 auto;
   overflow: clip;
   border: 1px solid rgba(255, 183, 205, 0.46);
@@ -700,6 +704,7 @@
   overscroll-behavior: contain;
   scrollbar-color: var(--sakura-light) transparent;
   scrollbar-width: thin;
+  scroll-behavior: smooth;
   font-size: 14px;
 }
 
@@ -863,7 +868,7 @@
 
   .article-toc-mobile {
     display: block;
-    width: min(100%, 950px);
+    width: min(100%, 1040px);
     margin: 0 auto;
   }
 }

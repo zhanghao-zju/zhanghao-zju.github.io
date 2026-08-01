@@ -23,7 +23,7 @@ const headingStartDepth = hasToc
 
 ---
 
-<BaseLayout title={`${post.frontmatter.title} | Blog`}>
+<BaseLayout title={`${post.frontmatter.title} | Blog`} wide>
   <div
     class:list={['article-reading-layout', { 'has-toc': hasToc }]}
     data-heading-start-depth={headingStartDepth}

@@ -2,8 +2,9 @@
 
 This directory is intentionally outside `public/` and is never deployed.
 
-- `core/` contains the 19 required `1024x1536` RGBA PNG layers on one untrimmed,
+- `core/` contains the 20 required `1024x1536` RGBA PNG layers on one untrimmed,
   top-left-origin canvas.
+  `body.png` contains no blue-book pixels; `book.png` is the independent book layer.
 - `walk/` contains the eight `384x512` RGBA walk frames plus their review material. The
   production frames are named `walk-01.png` through `walk-08.png` and share one baseline.
 - `extras/mouth-yawn.png` is an optional source expression that is not referenced by the current

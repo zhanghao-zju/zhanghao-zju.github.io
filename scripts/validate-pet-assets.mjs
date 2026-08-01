@@ -43,6 +43,9 @@ const get = (value, keys) => {
 };
 
 const layerFields = [
+  ['shadow'],
+  ['book'],
+  ['tail'],
   ['body'],
   ['head'],
   ['earLeft'],
@@ -60,9 +63,11 @@ const layerFields = [
   ['mouths', 'open'],
   ['mouths', 'smile'],
   ['paw'],
-  ['tail'],
-  ['shadow'],
 ];
+const allowedLayerKeys = new Set([
+  'book', 'body', 'head', 'earLeft', 'earRight', 'eyeBases', 'pupils', 'eyelids',
+  'mouths', 'paw', 'tail', 'shadow',
+]);
 
 const WALK_FRAME_COUNT = 8;
 const ARRIVAL_FRAME_COUNT = 10;
@@ -214,6 +219,24 @@ if (isRecord(manifest.anchors)) {
 
 if (get(manifest, ['hitAreas', 'units']) !== 'normalized') {
   fail('hitAreas.units must be "normalized".');
+}
+
+if (isRecord(manifest.layers)) {
+  for (const key of Object.keys(manifest.layers)) {
+    if (!allowedLayerKeys.has(key)) fail(`layers contains an unknown key: ${key}`);
+  }
+}
+
+const bookOriginX = get(manifest, ['bookMotion', 'transformOrigin', 'x']);
+const bookOriginY = get(manifest, ['bookMotion', 'transformOrigin', 'y']);
+if (bookOriginX !== 0.522461 || bookOriginY !== 0.708333) {
+  fail('bookMotion.transformOrigin must remain { x: 0.522461, y: 0.708333 }.');
+}
+if (get(manifest, ['bookMotion', 'maxRotationDeg']) !== 1.5) {
+  fail('bookMotion.maxRotationDeg must remain 1.5.');
+}
+if (get(manifest, ['bookMotion', 'maxLiftPx']) !== 1.5) {
+  fail('bookMotion.maxLiftPx must remain 1.5.');
 }
 if (isRecord(manifest.hitAreas)) {
   for (const [name, area] of Object.entries(manifest.hitAreas)) {
@@ -595,7 +618,7 @@ if (requireReady && !manifest.ready) {
 const packageBytes = coreBytes + walkBytes + arrivalBytes;
 if (coreBytes > CORE_BUDGET_BYTES) {
   const message =
-    `The 19 core layers total ${(coreBytes / 1024).toFixed(0)} KiB, exceeding the ` +
+    `The 20 core layers total ${(coreBytes / 1024).toFixed(0)} KiB, exceeding the ` +
     '300 KiB first-visible asset limit.';
   if (manifest.ready || requireReady) fail(message);
   else warn(message);

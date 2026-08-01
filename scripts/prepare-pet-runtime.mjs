@@ -17,6 +17,9 @@ const REQUIRED_WALK_CANVAS = { width: 384, height: 512 };
 const REQUIRED_ARRIVAL_CANVAS = { width: 384, height: 576 };
 
 const layerFields = [
+  ['shadow'],
+  ['book'],
+  ['tail'],
   ['body'],
   ['head'],
   ['earLeft'],
@@ -34,8 +37,6 @@ const layerFields = [
   ['mouths', 'open'],
   ['mouths', 'smile'],
   ['paw'],
-  ['tail'],
-  ['shadow'],
 ];
 
 const get = (value, keys) => keys.reduce((current, key) => current?.[key], value);
@@ -188,6 +189,7 @@ for (const entry of runtimeCoreEntries) {
       sourceHeight: manifest.source.canvas.height,
     },
     lossless,
+    quality: 88,
   });
 }
 

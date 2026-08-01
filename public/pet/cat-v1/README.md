@@ -9,7 +9,7 @@ renderer until the complete package passes `npm run check:pet:ready`.
 - The preserved PNG production sources use one transparent `1024x1536` canvas and top-left
   origin. Their directory is recorded by `source.coreDirectory` as a repository-relative path,
   never as a browser `/pet/` URL. Source paths may not contain `..` or resolve outside the repo.
-- The browser loads only the WebP files under `runtime/`. All 19 runtime layers use one
+- The browser loads only the WebP files under `runtime/`. All 20 runtime layers use one
   transparent `384x576` canvas and top-left origin.
 - Never trim, independently crop, recenter, or independently resize a source or runtime layer.
 - Generate every runtime layer together with `npm run prepare:pet-runtime`. The script uses the
@@ -20,7 +20,8 @@ renderer until the complete package passes `npm run check:pet:ready`.
 
 ## Required layers
 
-- Base: `shadow`, `tail`, `body`, `head`, `ear-left`, `ear-right`, `paw`.
+- Base order: `shadow`, `book`, `tail`, `body`, `head`, `ear-left`, `ear-right`, eyes,
+  mouths, then `paw`. The body source contains no book pixels.
 - Eyes: `eye-base-left`, `eye-base-right`, `pupil-left`, `pupil-right`.
 - Eyelids: left/right variants for both `half` and `closed`.
 - Mouths: `closed`, `small`, `open`, and `smile`.
@@ -28,6 +29,9 @@ renderer until the complete package passes `npm run check:pet:ready`.
 The eye bases stay still, pupils follow gaze, half eyelids express mood, and closed eyelids
 perform blinking. All mouth images must cover the same muzzle region so switching shapes does
 not expose seams or the original mouth underneath.
+
+The book pivots at normalized `52.2461% 70.8333%`, rotates no more than `±1.5deg`, and rises no
+more than `1.5px` in the runtime canvas while following gaze.
 
 ## Walk cycle
 
@@ -53,15 +57,15 @@ not expose seams or the original mouth underneath.
 - Composite each `384x512` walk frame into the arrival coordinate space at `(0, 64)` before
   playing the ten arrival frames with `arrival.durationsMs`.
 - The sequence is slow walk, blue-book magic, jump, landing, and stable sitting. Frame 10 must
-  match the neutral layered static composite so the handoff to live layers has no visible jump.
+  visually match the neutral layered static composite so the handoff to live layers has no visible jump.
 - With reduced motion, skip directly to frame 10 and fade into the live composite over the
   configured `arrival.reducedMotionFadeMs` interval.
 
 ## Activation checklist
 
-1. Export all 19 PNG source layers at `source.canvas`, all 8 source walk frames at
+1. Export all 20 PNG source layers at `source.canvas`, all 8 source walk frames at
    `source.walk.canvas`, and all 10 source arrival frames at `source.arrival.canvas`.
-2. Run `npm run prepare:pet-runtime` to create the 37 WebP runtime files without overwriting the
+2. Run `npm run prepare:pet-runtime` to create the 38 WebP runtime files without overwriting the
    PNG sources.
 3. Run `npm run check:pet` while iterating. It checks both source and runtime sets for file type,
    dimensions, alpha, non-empty pixels, and transparent canvas area.
@@ -71,7 +75,7 @@ not expose seams or the original mouth underneath.
    `npm run build`.
 
 The build validates both preserved PNG sources and optimized WebP runtime files, normalized
-metadata, the 300 KiB first-visible runtime budget for the 19 core layers, and the 800 KiB
+metadata, the 300 KiB first-visible runtime budget for the 20 core layers, and the 800 KiB
 full-package runtime budget. A missing or mismatched runtime asset causes a safe fallback to the
 CSS cat rather than a partially assembled character.
 

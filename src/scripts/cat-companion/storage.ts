@@ -3,6 +3,12 @@ const HIDDEN_KEY = 'cat-companion:v2:hidden';
 const SESSION_SEEN_KEY = 'cat-companion:v1:session-seen';
 const DIALOGUE_HISTORY_KEY = 'cat-companion:v1:dialogue-history';
 const RETURN_GREETING_KEY = 'cat-companion:v1:last-return-greeting';
+const POSITION_KEY = 'cat-companion:v1:position';
+
+export interface StoredPetPosition {
+  x: number;
+  y: number;
+}
 
 export interface StoredDialogueHistory {
   recentIds: string[];
@@ -107,5 +113,31 @@ export const writeLastReturnGreetingAt = (timestamp: number): void => {
     getStorage('session')?.setItem(RETURN_GREETING_KEY, String(timestamp));
   } catch {
     // The in-memory cooldown remains active for the current document.
+  }
+};
+
+export const readPetPosition = (): StoredPetPosition | null => {
+  const rawValue = readStorageValue('session', POSITION_KEY);
+  if (!rawValue) return null;
+  try {
+    const value = JSON.parse(rawValue) as Partial<StoredPetPosition>;
+    if (
+      typeof value.x !== 'number' ||
+      typeof value.y !== 'number' ||
+      !Number.isFinite(value.x) ||
+      !Number.isFinite(value.y)
+    ) return null;
+    return { x: value.x, y: value.y };
+  } catch {
+    return null;
+  }
+};
+
+export const writePetPosition = (position: StoredPetPosition): void => {
+  if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
+  try {
+    getStorage('session')?.setItem(POSITION_KEY, JSON.stringify(position));
+  } catch {
+    // Position falls back to the current document when session storage is unavailable.
   }
 };
