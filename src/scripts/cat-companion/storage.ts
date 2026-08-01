@@ -4,6 +4,10 @@ const SESSION_SEEN_KEY = 'cat-companion:v1:session-seen';
 const DIALOGUE_HISTORY_KEY = 'cat-companion:v1:dialogue-history';
 const RETURN_GREETING_KEY = 'cat-companion:v1:last-return-greeting';
 const POSITION_KEY = 'cat-companion:v1:position';
+const GIANT_POSITION_KEY = 'cat-companion:v1:giant-position';
+const SIZE_MODE_KEY = 'cat-companion:v1:size-mode';
+
+export type PetSizeMode = 'normal' | 'giant';
 
 export interface StoredPetPosition {
   x: number;
@@ -116,8 +120,11 @@ export const writeLastReturnGreetingAt = (timestamp: number): void => {
   }
 };
 
-export const readPetPosition = (): StoredPetPosition | null => {
-  const rawValue = readStorageValue('session', POSITION_KEY);
+const positionKey = (mode: PetSizeMode): string =>
+  mode === 'giant' ? GIANT_POSITION_KEY : POSITION_KEY;
+
+export const readPetPosition = (mode: PetSizeMode = 'normal'): StoredPetPosition | null => {
+  const rawValue = readStorageValue('session', positionKey(mode));
   if (!rawValue) return null;
   try {
     const value = JSON.parse(rawValue) as Partial<StoredPetPosition>;
@@ -133,11 +140,25 @@ export const readPetPosition = (): StoredPetPosition | null => {
   }
 };
 
-export const writePetPosition = (position: StoredPetPosition): void => {
+export const writePetPosition = (
+  position: StoredPetPosition,
+  mode: PetSizeMode = 'normal',
+): void => {
   if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
   try {
-    getStorage('session')?.setItem(POSITION_KEY, JSON.stringify(position));
+    getStorage('session')?.setItem(positionKey(mode), JSON.stringify(position));
   } catch {
     // Position falls back to the current document when session storage is unavailable.
+  }
+};
+
+export const readPetSizeMode = (): PetSizeMode =>
+  readStorageValue('session', SIZE_MODE_KEY) === 'giant' ? 'giant' : 'normal';
+
+export const writePetSizeMode = (mode: PetSizeMode): void => {
+  try {
+    getStorage('session')?.setItem(SIZE_MODE_KEY, mode);
+  } catch {
+    // Size mode falls back to the current document when session storage is unavailable.
   }
 };

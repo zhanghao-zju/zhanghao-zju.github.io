@@ -45,12 +45,30 @@ for (const htmlPath of htmlFiles) {
       `${path.relative(distRoot, htmlPath)} must declare one 172x258 cat size contract.`,
     );
   }
+  const sizeModeCount = html.match(/\bdata-size-mode="normal"/g)?.length ?? 0;
+  const giantButtonCount = html.match(/\bdata-pet-action="giant"/g)?.length ?? 0;
+  if (sizeModeCount !== 1 || giantButtonCount !== 1) {
+    pageErrors.push(
+      `${path.relative(distRoot, htmlPath)} must declare normal size mode and one giant toggle.`,
+    );
+  }
+  if (!/data-pet-action="giant"[^>]*aria-label="进入巨大模式"[^>]*aria-pressed="false"/.test(html)) {
+    pageErrors.push(
+      `${path.relative(distRoot, htmlPath)} giant toggle is missing its initial accessible state.`,
+    );
+  }
 }
 
 const dialoguePath = path.join(projectRoot, 'src', 'data', 'pet-lines.zh-CN.json');
 const lines = JSON.parse(await readFile(dialoguePath, 'utf8'));
 const petStylesPath = path.join(projectRoot, 'src', 'styles', 'cat-companion.css');
 const petStyles = await readFile(petStylesPath, 'utf8');
+const petControllerPath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'controller.ts');
+const petController = await readFile(petControllerPath, 'utf8');
+const petGazePath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'gaze.ts');
+const petGaze = await readFile(petGazePath, 'utf8');
+const petStoragePath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'storage.ts');
+const petStorage = await readFile(petStoragePath, 'utf8');
 const petManifestPath = path.join(projectRoot, 'public', 'pet', 'cat-v1', 'manifest.json');
 const petManifest = JSON.parse(await readFile(petManifestPath, 'utf8'));
 const expectedTriggers = [
@@ -129,8 +147,55 @@ if (
 ) {
   dialogueErrors.push('The formal cat renderer must keep the unified 172x258 CSS size contract.');
 }
+const baseCharacterRule =
+  petStyles.match(/\[data-pet-character\]\s*\{(?<declarations>[^}]*)\}/)?.groups?.declarations ?? '';
+if (
+  !baseCharacterRule.includes('left: calc((220px - var(--pet-asset-width, 172px)) / 2);') ||
+  !baseCharacterRule.includes('width: var(--pet-asset-width, 172px);') ||
+  !baseCharacterRule.includes('height: var(--pet-asset-height, 258px);') ||
+  /\bwidth:\s*190px|\bheight:\s*216px/.test(baseCharacterRule)
+) {
+  dialogueErrors.push(
+    'Base, fallback, loading, walk, arrival and asset renderers must share one 172x258 character box.',
+  );
+}
 if (petStyles.includes('--pet-asset-tablet-') || petStyles.includes('--pet-asset-mobile-')) {
   dialogueErrors.push('Breakpoint-specific formal cat size variables are not allowed.');
+}
+
+const integrationContracts = [
+  [petController, 'const MAX_GIANT_SCALE = 3;', 'Giant mode must cap desktop scaling at 3x.'],
+  [petController, 'const GIANT_MOTION_GUTTER = 12;', 'Giant contain sizing must reserve room for ambient motion.'],
+  [petController, 'this.#root.dataset.sizeMode = this.#sizeMode;', 'Giant mode must expose its data state.'],
+  [petController, "giant ? '退出巨大模式' : '进入巨大模式'", 'The giant toggle label must update dynamically.'],
+  [petController, 'readPetPosition(this.#sizeMode)', 'Normal and giant positions must restore independently.'],
+  [petController, 'writePetPosition({ x: bounds.left, y: bounds.top }, this.#sizeMode)', 'Dragging must persist the active mode position.'],
+  [petController, "this.#root.dataset.tocOpen === 'true'", 'The giant toggle must respect mobile TOC mutual exclusion.'],
+  [petController, 'this.#root.dataset.arrivalPhase', 'The giant toggle must be unavailable during arrival.'],
+  [petController, 'this.#giantButton.disabled = true;', 'Arrival must disable the giant toggle.'],
+  [petController, 'this.#giantButton.disabled = false;', 'Arrival completion must restore the giant toggle.'],
+  [petController, "this.#bubble.dataset.bubbleSide = 'center';", 'Speech bubbles must be horizontally centered on the cat.'],
+  [petController, "const vertical = aboveTop >= viewport.top ? 'above' : 'below';", 'Speech bubbles may move below only when top space is unavailable.'],
+  [petStorage, 'cat-companion:v1:giant-position', 'Giant position must use an independent session key.'],
+  [petStorage, 'cat-companion:v1:size-mode', 'Size mode must persist for the session.'],
+  [petStyles, '[data-cat-companion][data-size-mode="giant"]', 'Giant mode must have an explicit CSS state.'],
+  [petStyles, 'transform: scale(var(--pet-scale));', 'Character scaling must keep the 172x258 layout contract.'],
+  [petStyles, '--pet-bubble-arrow-x', 'The centered bubble arrow must point at the cat after clamping.'],
+  [petStyles, ':not([data-hidden="true"]):not([data-toc-open="true"])', 'Hidden and TOC states must suppress the giant toolbar.'],
+  [petStyles, 'var(--pet-toolbar-top', 'The giant exit toolbar must stay inside the visual viewport.'],
+  [petStyles, '.article-toc-mobile > summary', 'The mobile article TOC trigger must remain reachable over a giant cat.'],
+  [petGaze, '--pet-body-follow-turn', 'Gaze must expose a subtle body rotation follow value.'],
+  [petGaze, '--pet-body-follow-lift', 'Gaze must expose a subtle body lift follow value.'],
+  [petStyles, 'transform-origin: 50% 82%;', 'Body follow must pivot near the planted feet.'],
+  [petStyles, 'cat-companion-body-pat-follow', 'Head pat reactions must coordinate the body.'],
+  [petStyles, 'cat-companion-body-nose-follow', 'Nose reactions must coordinate the body.'],
+  [petStyles, 'cat-companion-body-rapid-follow', 'Rapid reactions must coordinate the body.'],
+];
+for (const [source, snippet, message] of integrationContracts) {
+  if (!source.includes(snippet)) dialogueErrors.push(message);
+}
+if (!/@media \(prefers-reduced-motion: reduce\)[\s\S]*?\[data-pet-character\][\s\S]*?transform: scale\(var\(--pet-scale\)\)/.test(petStyles)) {
+  dialogueErrors.push('Reduced motion must retain the selected normal or giant scale.');
 }
 
 const coreRuntimePaths = [

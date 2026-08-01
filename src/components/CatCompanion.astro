@@ -11,6 +11,7 @@ const pagePath = Astro.url.pathname;
   data-visible="false"
   data-renderer="loading"
   data-state="idle"
+  data-size-mode="normal"
   data-size-contract="172x258"
   aria-label="互动猫咪精灵"
 >
@@ -72,6 +73,16 @@ const pagePath = Astro.url.pathname;
       title="逗猫棒"
     >
       <span class="cat-companion__tool-mark" aria-hidden="true">✦</span>
+    </button>
+    <button
+      class="cat-companion__tool"
+      type="button"
+      data-pet-action="giant"
+      aria-label="进入巨大模式"
+      aria-pressed="false"
+      title="巨大模式"
+    >
+      <span class="cat-companion__tool-mark cat-companion__tool-mark--giant" aria-hidden="true">⛶</span>
     </button>
     <button
       class="cat-companion__tool"

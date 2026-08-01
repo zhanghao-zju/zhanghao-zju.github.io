@@ -6,10 +6,13 @@ import {
   readHiddenPreference,
   readLastReturnGreetingAt,
   readPetPosition,
+  readPetSizeMode,
   writeHiddenPreference,
   writeLastReturnGreetingAt,
   writePetPosition,
+  writePetSizeMode,
 } from './storage';
+import type { PetSizeMode } from './storage';
 import type { PetLine, PetMood, PetState, PetTrigger, SpeechRequest, StateLease } from './types';
 
 const RETURN_MIN_AWAY_MS = 8_000;
@@ -22,6 +25,10 @@ const RAPID_CLICK_COOLDOWN_MS = 4_000;
 const IDLE_MIN_MS = 55_000;
 const IDLE_JITTER_MS = 35_000;
 const ARTICLE_TOC_OVERLAY_QUERY = '(max-width: 1050px)';
+const NORMAL_CHARACTER_WIDTH = 172;
+const NORMAL_CHARACTER_HEIGHT = 258;
+const MAX_GIANT_SCALE = 3;
+const GIANT_MOTION_GUTTER = 12;
 
 const lines = rawLines as PetLine[];
 
@@ -92,6 +99,7 @@ class CatCompanionController {
   #bubbleText: HTMLElement;
   #liveRegion: HTMLElement;
   #toyButton: HTMLButtonElement;
+  #giantButton: HTMLButtonElement;
   #hideButton: HTMLButtonElement;
   #recallButton: HTMLButtonElement;
   #toy: HTMLElement;
@@ -151,6 +159,8 @@ class CatCompanionController {
   #dragging = false;
   #suppressStageClickUntil = 0;
   #positionRestored = false;
+  #sizeMode: PetSizeMode = 'normal';
+  #bubblePositionFrame = 0;
   #safeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 
   constructor(root: HTMLElement) {
@@ -162,6 +172,7 @@ class CatCompanionController {
     this.#liveRegion = required(root, '[data-pet-live]');
     required(root, '[data-pet-toolbar]');
     this.#toyButton = required(root, '[data-pet-action="toy"]');
+    this.#giantButton = required(root, '[data-pet-action="giant"]');
     this.#hideButton = required(root, '[data-pet-action="hide"]');
     this.#recallButton = required(root, '[data-pet-recall]');
     this.#toy = required(root, '[data-pet-toy]');
@@ -177,6 +188,8 @@ class CatCompanionController {
     this.#lastReturnGreetingAt = readLastReturnGreetingAt();
     this.#machine = new PetStateMachine((state) => this.#renderState(state));
     this.#gaze = new GazeController(root, this.#character, this.#reducedMotionQuery.matches);
+    this.#sizeMode = readPetSizeMode();
+    this.#renderSizeMode();
 
     this.#bindEvents();
     this.#setInitialVisibility();
@@ -202,6 +215,7 @@ class CatCompanionController {
     window.clearTimeout(this.#scrollTimer);
     window.clearTimeout(this.#attentionTimer);
     window.clearTimeout(this.#touchToolbarTimer);
+    window.cancelAnimationFrame(this.#bubblePositionFrame);
     this.#stopArrival();
   }
 
@@ -231,6 +245,8 @@ class CatCompanionController {
     this.#stage.addEventListener('keydown', this.#onStageKeyDown, { signal });
     this.#toyButton.addEventListener('click', () => this.#toggleToy(), { signal });
     this.#toyButton.addEventListener('keydown', this.#onToyButtonKeyDown, { signal });
+    this.#giantButton.addEventListener('click', this.#onGiantToggle, { signal });
+    this.#giantButton.addEventListener('keydown', this.#onGiantButtonKeyDown, { signal });
     this.#hideButton.addEventListener('click', this.#onHide, { signal });
     this.#hideButton.addEventListener('keydown', this.#onHideButtonKeyDown, { signal });
     this.#recallButton.addEventListener('click', this.#onRecall, { signal });
@@ -422,6 +438,7 @@ class CatCompanionController {
     }
     event.preventDefault();
     this.#setRootPosition(this.#dragRootLeft + dx, this.#dragRootTop + dy, false);
+    this.#scheduleBubblePosition();
   };
 
   #onDragPointerUp = (event: PointerEvent): void => {
@@ -442,8 +459,8 @@ class CatCompanionController {
     }
     if (persist) {
       const bounds = this.#root.getBoundingClientRect();
-      writePetPosition({ x: bounds.left, y: bounds.top });
-      this.#positionBubble();
+      writePetPosition({ x: bounds.left, y: bounds.top }, this.#sizeMode);
+      this.#scheduleBubblePosition();
     }
     this.#dragging = false;
     delete this.#root.dataset.dragState;
@@ -503,25 +520,31 @@ class CatCompanionController {
     this.#root.style.left = `${nextLeft}px`;
     this.#root.style.top = `${nextTop}px`;
     this.#root.dataset.positionSource = 'user';
-    if (persist) writePetPosition({ x: nextLeft, y: nextTop });
+    if (persist) writePetPosition({ x: nextLeft, y: nextTop }, this.#sizeMode);
     this.#gaze.updateBounds();
   }
 
   #restorePosition(): void {
     if (this.#positionRestored) return;
     this.#positionRestored = true;
-    const position = readPetPosition();
-    if (position) this.#setRootPosition(position.x, position.y, false);
+    this.#updateGiantScale();
+    const position = readPetPosition(this.#sizeMode);
+    if (position) {
+      this.#setRootPosition(position.x, position.y, false);
+    } else if (this.#sizeMode === 'giant') {
+      this.#centerGiantMode();
+    }
   }
 
   #onViewportChange = (): void => {
     this.#measureSafeArea();
+    this.#updateGiantScale();
     if (this.#root.dataset.positionSource === 'user') {
       const bounds = this.#root.getBoundingClientRect();
       this.#setRootPosition(bounds.left, bounds.top, true);
     }
     this.#gaze.updateBounds();
-    this.#positionBubble();
+    this.#scheduleBubblePosition();
   };
 
   #onStageKeyDown = (event: KeyboardEvent): void => {
@@ -533,6 +556,90 @@ class CatCompanionController {
   #onToyButtonKeyDown = (event: KeyboardEvent): void => {
     this.#activateButtonFromKeyboard(event, () => this.#toggleToy());
   };
+
+  #onGiantButtonKeyDown = (event: KeyboardEvent): void => {
+    this.#activateButtonFromKeyboard(event, this.#onGiantToggle);
+  };
+
+  #onGiantToggle = (): void => {
+    if (
+      this.#hidden ||
+      this.#root.dataset.tocOpen === 'true' ||
+      this.#root.dataset.arrivalPhase ||
+      this.#dragPointerId !== null
+    ) return;
+
+    const currentBounds = this.#root.getBoundingClientRect();
+    writePetPosition({ x: currentBounds.left, y: currentBounds.top }, this.#sizeMode);
+    this.#sizeMode = this.#sizeMode === 'normal' ? 'giant' : 'normal';
+    writePetSizeMode(this.#sizeMode);
+    this.#renderSizeMode();
+
+    const storedPosition = readPetPosition(this.#sizeMode);
+    if (storedPosition) {
+      this.#setRootPosition(storedPosition.x, storedPosition.y, false);
+    } else if (this.#sizeMode === 'giant') {
+      this.#centerGiantMode();
+    } else {
+      this.#restoreDefaultPosition();
+    }
+    this.#scheduleBubblePosition();
+  };
+
+  #renderSizeMode(): void {
+    const giant = this.#sizeMode === 'giant';
+    this.#root.dataset.sizeMode = this.#sizeMode;
+    this.#giantButton.setAttribute('aria-pressed', String(giant));
+    this.#giantButton.setAttribute('aria-label', giant ? '退出巨大模式' : '进入巨大模式');
+    this.#giantButton.title = giant ? '退出巨大模式' : '巨大模式';
+    this.#updateGiantScale();
+  }
+
+  #updateGiantScale(): void {
+    const viewport = this.#viewportBounds();
+    const scale = this.#sizeMode === 'giant'
+      ? Math.max(
+          0.25,
+          Math.min(
+            MAX_GIANT_SCALE,
+            (viewport.right - viewport.left - GIANT_MOTION_GUTTER * 2) /
+              NORMAL_CHARACTER_WIDTH,
+            (viewport.bottom - viewport.top - GIANT_MOTION_GUTTER * 2) /
+              NORMAL_CHARACTER_HEIGHT,
+          ),
+        )
+      : 1;
+    this.#root.style.setProperty('--pet-scale', String(scale));
+    this.#root.style.setProperty('--pet-giant-scale', String(scale));
+    this.#root.style.setProperty('--pet-toolbar-top', `${viewport.top}px`);
+    this.#root.style.setProperty(
+      '--pet-toolbar-right',
+      `${Math.max(0, window.innerWidth - viewport.right)}px`,
+    );
+  }
+
+  #centerGiantMode(): void {
+    this.#updateGiantScale();
+    const viewport = this.#viewportBounds();
+    const character = this.#character.getBoundingClientRect();
+    const root = this.#root.getBoundingClientRect();
+    const targetCenterX = (viewport.left + viewport.right) / 2;
+    const targetCenterY = (viewport.top + viewport.bottom) / 2;
+    this.#setRootPosition(
+      root.left + targetCenterX - (character.left + character.right) / 2,
+      root.top + targetCenterY - (character.top + character.bottom) / 2,
+      false,
+    );
+  }
+
+  #restoreDefaultPosition(): void {
+    this.#root.style.removeProperty('top');
+    this.#root.style.removeProperty('right');
+    this.#root.style.removeProperty('bottom');
+    this.#root.style.removeProperty('left');
+    delete this.#root.dataset.positionSource;
+    this.#gaze.updateBounds();
+  }
 
   #onHideButtonKeyDown = (event: KeyboardEvent): void => {
     this.#activateButtonFromKeyboard(event, this.#onHide);
@@ -657,6 +764,7 @@ class CatCompanionController {
     this.#pendingArrival = true;
     this.#pendingRecallSpeech = true;
     this.#root.dataset.arrivalPhase = 'preparing';
+    this.#giantButton.disabled = true;
     this.#touchPrimed = true;
     this.#setHidden(false, true);
     if (this.#root.dataset.renderer === 'assets') {
@@ -836,7 +944,7 @@ class CatCompanionController {
     this.#root.dataset.mouth = 'closed';
     this.#bubbleText.textContent = '';
     this.#bubble.hidden = false;
-    requestAnimationFrame(() => this.#positionBubble());
+    this.#scheduleBubblePosition();
     if (request.announce) this.#liveRegion.textContent = line.text;
 
     try {
@@ -856,10 +964,11 @@ class CatCompanionController {
             break;
           }
           this.#bubbleText.textContent += character;
+          this.#scheduleBubblePosition();
           await wait(34, signal);
         }
         this.#root.dataset.mouth = 'closed';
-        this.#positionBubble();
+        this.#scheduleBubblePosition();
       }
 
       await wait(Math.max(1_150, Math.min(2_400, line.text.length * 105)), signal);
@@ -883,40 +992,39 @@ class CatCompanionController {
     if (this.#bubble.hidden || this.#hidden || this.#root.dataset.tocOpen === 'true') return;
     const viewport = this.#viewportBounds();
     const character = this.#character.getBoundingClientRect();
+    this.#bubble.style.setProperty(
+      '--pet-bubble-available-width',
+      `${Math.max(120, viewport.right - viewport.left)}px`,
+    );
     const bubble = this.#bubble.getBoundingClientRect();
     const gap = 12;
-    const candidates = [
-      { side: 'right', vertical: 'above', left: character.right + gap, top: character.top - bubble.height - gap },
-      { side: 'left', vertical: 'above', left: character.left - bubble.width - gap, top: character.top - bubble.height - gap },
-      { side: 'right', vertical: 'below', left: character.right + gap, top: character.bottom + gap },
-      { side: 'left', vertical: 'below', left: character.left - bubble.width - gap, top: character.bottom + gap },
-    ] as const;
-    const toc = this.#mobileToc?.open ? this.#mobileToc.getBoundingClientRect() : null;
-    const overflowScore = (candidate: (typeof candidates)[number]) => {
-      const right = candidate.left + bubble.width;
-      const bottom = candidate.top + bubble.height;
-      let score =
-        Math.max(0, viewport.left - candidate.left) +
-        Math.max(0, right - viewport.right) +
-        Math.max(0, viewport.top - candidate.top) +
-        Math.max(0, bottom - viewport.bottom);
-      if (toc) {
-        const overlapWidth = Math.max(0, Math.min(right, toc.right) - Math.max(candidate.left, toc.left));
-        const overlapHeight = Math.max(0, Math.min(bottom, toc.bottom) - Math.max(candidate.top, toc.top));
-        score += overlapWidth * overlapHeight;
-      }
-      return score;
-    };
-    const chosen = candidates.reduce((best, candidate) =>
-      overflowScore(candidate) < overflowScore(best) ? candidate : best,
+    const characterCenterX = (character.left + character.right) / 2;
+    const idealLeft = characterCenterX - bubble.width / 2;
+    const aboveTop = character.top - bubble.height - gap;
+    const belowTop = character.bottom + gap;
+    const vertical = aboveTop >= viewport.top ? 'above' : 'below';
+    const idealTop = vertical === 'above' ? aboveTop : belowTop;
+    const maxLeft = Math.max(viewport.left, viewport.right - bubble.width);
+    const left = Math.min(maxLeft, Math.max(viewport.left, idealLeft));
+    const top = Math.min(viewport.bottom - bubble.height, Math.max(viewport.top, idealTop));
+    const arrowX = Math.min(
+      Math.max(18, bubble.width - 18),
+      Math.max(18, characterCenterX - left),
     );
-    const left = Math.min(viewport.right - bubble.width, Math.max(viewport.left, chosen.left));
-    const top = Math.min(viewport.bottom - bubble.height, Math.max(viewport.top, chosen.top));
     this.#bubble.style.setProperty('--pet-bubble-x', `${left}px`);
     this.#bubble.style.setProperty('--pet-bubble-y', `${top}px`);
-    this.#bubble.dataset.bubbleSide = chosen.side;
-    this.#bubble.dataset.bubbleVertical = chosen.vertical;
-    this.#bubble.dataset.bubbleClamped = String(left !== chosen.left || top !== chosen.top);
+    this.#bubble.style.setProperty('--pet-bubble-arrow-x', `${arrowX}px`);
+    this.#bubble.dataset.bubbleSide = 'center';
+    this.#bubble.dataset.bubbleVertical = vertical;
+    this.#bubble.dataset.bubbleClamped = String(left !== idealLeft || top !== idealTop);
+  }
+
+  #scheduleBubblePosition(): void {
+    if (this.#bubblePositionFrame) return;
+    this.#bubblePositionFrame = window.requestAnimationFrame(() => {
+      this.#bubblePositionFrame = 0;
+      this.#positionBubble();
+    });
   }
 
   #cancelSpeech(): void {
@@ -1184,9 +1292,15 @@ class CatCompanionController {
       this.#walkRoot.replaceChildren(...walkFrames, ...arrivalFrames);
       this.#root.dataset.renderer = 'assets';
       this.#gaze.updateBounds();
+      if (this.#sizeMode === 'giant' && !readPetPosition('giant')) {
+        requestAnimationFrame(() => this.#centerGiantMode());
+      }
       if (this.#pendingArrival) void this.#playArrival();
     } catch {
       this.#root.dataset.renderer = 'fallback';
+      if (this.#sizeMode === 'giant' && !readPetPosition('giant')) {
+        requestAnimationFrame(() => this.#centerGiantMode());
+      }
       this.#stopArrival(false);
       this.#pendingArrival = false;
       this.#finishRecall();
@@ -1195,6 +1309,7 @@ class CatCompanionController {
 
   async #playArrival(): Promise<void> {
     const runVersion = ++this.#arrivalRunVersion;
+    this.#giantButton.disabled = true;
     if (
       this.#walkFrames.length !== 8 ||
       this.#arrivalFrames.length !== 10 ||
@@ -1270,6 +1385,7 @@ class CatCompanionController {
     delete this.#root.dataset.arrivalPhase;
     this.#root.style.removeProperty('--pet-walk-duration');
     this.#root.style.removeProperty('--pet-arrival-handoff-duration');
+    this.#giantButton.disabled = false;
     for (const frame of [...this.#walkFrames, ...this.#arrivalFrames]) delete frame.dataset.active;
   }
 

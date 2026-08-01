@@ -102,6 +102,14 @@ export class GazeController {
     this.#root.style.setProperty('--pet-gaze-ny', this.#currentY.toFixed(4));
     this.#root.style.setProperty('--pet-head-turn', `${(this.#currentX * 5.25).toFixed(2)}deg`);
     this.#root.style.setProperty('--pet-head-lift', `${(this.#currentY * 2).toFixed(2)}px`);
+    this.#root.style.setProperty(
+      '--pet-body-follow-turn',
+      `${(this.#currentX * 0.79).toFixed(2)}deg`,
+    );
+    this.#root.style.setProperty(
+      '--pet-body-follow-lift',
+      `${(this.#currentY * 0.3).toFixed(2)}px`,
+    );
     this.#root.style.setProperty('--pet-book-turn', `${(this.#currentX * 1.5).toFixed(2)}deg`);
     this.#root.style.setProperty(
       '--pet-book-lift',
