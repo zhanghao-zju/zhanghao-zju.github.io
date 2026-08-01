@@ -1284,11 +1284,12 @@ class CatCompanionController {
   }
 
   #applyAssetManifest(manifest: AssetManifest): void {
-    for (const breakpoint of ['desktop', 'tablet', 'mobile'] as const) {
-      const size = manifest.displaySizes[breakpoint];
-      this.#root.style.setProperty(`--pet-asset-${breakpoint}-width`, `${size.width}px`);
-      this.#root.style.setProperty(`--pet-asset-${breakpoint}-height`, `${size.height}px`);
+    const size = manifest.displaySizes.desktop;
+    if (size.width !== 172 || size.height !== 258) {
+      throw new Error('Pet desktop display size must remain 172x258.');
     }
+    this.#root.style.setProperty('--pet-asset-width', `${size.width}px`);
+    this.#root.style.setProperty('--pet-asset-height', `${size.height}px`);
 
     const setOrigin = (name: string, point: { x: number; y: number }) => {
       this.#root.style.setProperty(name, `${point.x * 100}% ${point.y * 100}%`);

@@ -324,6 +324,15 @@
     "paths": ["*"]
   },
   {
+    "id": "idle-07",
+    "trigger": "idle",
+    "text": "对于一个温和而懦弱的灵魂，最大的不幸莫过于体验到了一次最大的幸福。",
+    "mood": "relaxed",
+    "weight": 2,
+    "minIntervalMs": 120000,
+    "paths": ["*"]
+  },
+  {
     "id": "page-blog-01",
     "trigger": "page-blog",
     "text": "慢慢读，我陪你想一想。",

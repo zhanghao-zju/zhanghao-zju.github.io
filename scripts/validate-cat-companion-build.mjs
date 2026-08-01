@@ -39,10 +39,18 @@ for (const htmlPath of htmlFiles) {
       `${path.relative(distRoot, htmlPath)} contains ${liveRegionCount} cat companion live regions.`,
     );
   }
+  const sizeContractCount = html.match(/\bdata-size-contract="172x258"/g)?.length ?? 0;
+  if (sizeContractCount !== 1) {
+    pageErrors.push(
+      `${path.relative(distRoot, htmlPath)} must declare one 172x258 cat size contract.`,
+    );
+  }
 }
 
 const dialoguePath = path.join(projectRoot, 'src', 'data', 'pet-lines.zh-CN.json');
 const lines = JSON.parse(await readFile(dialoguePath, 'utf8'));
+const petStylesPath = path.join(projectRoot, 'src', 'styles', 'cat-companion.css');
+const petStyles = await readFile(petStylesPath, 'utf8');
 const petManifestPath = path.join(projectRoot, 'public', 'pet', 'cat-v1', 'manifest.json');
 const petManifest = JSON.parse(await readFile(petManifestPath, 'utf8'));
 const expectedTriggers = [
@@ -108,6 +116,21 @@ if (!Array.isArray(lines)) {
     const count = lines.filter((line) => line?.trigger === trigger).length;
     if (count < 4) dialogueErrors.push(`Trigger ${trigger} has only ${count} dialogue lines.`);
   }
+}
+
+const requiredQuote =
+  '对于一个温和而懦弱的灵魂，最大的不幸莫过于体验到了一次最大的幸福。';
+if (!Array.isArray(lines) || !lines.some((line) => line?.text === requiredQuote)) {
+  dialogueErrors.push('The required quoted idle line is missing.');
+}
+if (
+  !petStyles.includes('width: var(--pet-asset-width, 172px);') ||
+  !petStyles.includes('height: var(--pet-asset-height, 258px);')
+) {
+  dialogueErrors.push('The formal cat renderer must keep the unified 172x258 CSS size contract.');
+}
+if (petStyles.includes('--pet-asset-tablet-') || petStyles.includes('--pet-asset-mobile-')) {
+  dialogueErrors.push('Breakpoint-specific formal cat size variables are not allowed.');
 }
 
 const coreRuntimePaths = [

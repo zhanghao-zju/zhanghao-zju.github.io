@@ -17,6 +17,9 @@ renderer until the complete package passes `npm run check:pet:ready`.
   quality-88 WebP with alpha quality 100 for the remaining core and walk artwork. Arrival frames
   use quality 86 with alpha quality 100 to preserve a safe margin under the full-package budget.
 - Normalized anchors and hit areas apply unchanged after uniform resizing.
+- The live static renderer, walk sequence, and arrival handoff use one visual rectangle on every
+  page and viewport: `172x258` CSS pixels. Tablet, mobile, and article routes must not override
+  that rendered character size; only the user-controlled fixed position may change.
 
 ## Required layers
 
@@ -31,7 +34,8 @@ perform blinking. All mouth images must cover the same muzzle region so switchin
 not expose seams or the original mouth underneath.
 
 The book pivots at normalized `52.2461% 70.8333%`, rotates no more than `±1.5deg`, and rises no
-more than `1.5px` in the runtime canvas while following gaze.
+more than `1.5px` in the runtime canvas while following gaze. The source-reviewed
+`--pet-book-scale` defaults to `1.05` so the book reads slightly larger without breaking paw contact.
 
 ## Walk cycle
 
