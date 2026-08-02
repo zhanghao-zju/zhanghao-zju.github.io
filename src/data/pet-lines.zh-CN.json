@@ -1,182 +1,29 @@
 [
   {
+    "id": "first-visit-01",
+    "trigger": "first-visit",
+    "text": "你好，我叫长毛，是一只长毛小狸花。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 0,
+    "paths": ["*"]
+  },
+  {
     "id": "tab-return-01",
     "trigger": "tab-return",
-    "text": "你回来啦。",
-    "mood": "happy",
-    "weight": 3,
+    "text": "刚刚去忙了吗？",
+    "mood": "curious",
+    "weight": 1,
     "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
     "id": "tab-return-02",
     "trigger": "tab-return",
-    "text": "刚好，我还在这里。",
+    "text": "很高兴再见到你。",
     "mood": "happy",
-    "weight": 3,
+    "weight": 1,
     "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-03",
-    "trigger": "tab-return",
-    "text": "欢迎回来，继续慢慢看吧。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-04",
-    "trigger": "tab-return",
-    "text": "又见到你，真好。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-01",
-    "trigger": "tab-return-long",
-    "text": "等你好久，终于回来啦。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-02",
-    "trigger": "tab-return-long",
-    "text": "刚才去忙了吗？",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-03",
-    "trigger": "tab-return-long",
-    "text": "别担心，我一直守着这里。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-04",
-    "trigger": "tab-return-long",
-    "text": "歇一歇，再继续也不迟。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-01",
-    "trigger": "pet-head",
-    "text": "这里可以再摸一下。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-02",
-    "trigger": "pet-head",
-    "text": "嗯，感觉很安心。",
-    "mood": "relaxed",
-    "weight": 3,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-03",
-    "trigger": "pet-head",
-    "text": "你的手心很温柔。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-04",
-    "trigger": "pet-head",
-    "text": "好啦，给你一点好运。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-01",
-    "trigger": "pet-nose",
-    "text": "鼻子可不是按钮。",
-    "mood": "surprised",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-02",
-    "trigger": "pet-nose",
-    "text": "被你发现啦。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-03",
-    "trigger": "pet-nose",
-    "text": "轻一点，会有点痒。",
-    "mood": "surprised",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-04",
-    "trigger": "pet-nose",
-    "text": "这个小机关没有藏好。",
-    "mood": "curious",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-01",
-    "trigger": "rapid-click",
-    "text": "慢一点，我会晕的。",
-    "mood": "annoyed",
-    "weight": 3,
-    "minIntervalMs": 30000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-02",
-    "trigger": "rapid-click",
-    "text": "让我先缓一小会儿。",
-    "mood": "sleepy",
-    "weight": 3,
-    "minIntervalMs": 30000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-03",
-    "trigger": "rapid-click",
-    "text": "别急，我们慢慢来。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 30000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-04",
-    "trigger": "rapid-click",
-    "text": "收到啦，一次就好。",
-    "mood": "annoyed",
-    "weight": 2,
-    "minIntervalMs": 30000,
     "paths": ["*"]
   },
   {
@@ -184,34 +31,7 @@
     "trigger": "toy-start",
     "text": "这次一定抓得到。",
     "mood": "playful",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-start-02",
-    "trigger": "toy-start",
-    "text": "目标出现，准备出爪。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-start-03",
-    "trigger": "toy-start",
-    "text": "我已经盯住它啦。",
-    "mood": "playful",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-start-04",
-    "trigger": "toy-start",
-    "text": "别让那个光点跑掉。",
-    "mood": "curious",
-    "weight": 2,
+    "weight": 1,
     "minIntervalMs": 15000,
     "paths": ["*"]
   },
@@ -220,440 +40,323 @@
     "trigger": "toy-end",
     "text": "差一点就抓到了。",
     "mood": "happy",
-    "weight": 3,
+    "weight": 1,
     "minIntervalMs": 15000,
     "paths": ["*"]
   },
   {
-    "id": "toy-end-02",
-    "trigger": "toy-end",
-    "text": "今天先玩到这里吧。",
+    "id": "pet-head-01",
+    "trigger": "pet-head",
+    "text": "这里可以再摸一下。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 8000,
+    "paths": ["*"]
+  },
+  {
+    "id": "pet-head-02",
+    "trigger": "pet-head",
+    "text": "嗯，感觉很安心。",
     "mood": "relaxed",
-    "weight": 3,
+    "weight": 1,
+    "minIntervalMs": 8000,
+    "paths": ["*"]
+  },
+  {
+    "id": "pet-head-03",
+    "trigger": "pet-head",
+    "text": "你的手心很温柔。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 8000,
+    "paths": ["*"]
+  },
+  {
+    "id": "rapid-click-01",
+    "trigger": "rapid-click",
+    "text": "再摸我就哈气啦！",
+    "mood": "annoyed",
+    "weight": 1,
     "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-end-03",
-    "trigger": "toy-end",
-    "text": "下次我会更快一点。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-end-04",
-    "trigger": "toy-end",
-    "text": "玩累啦，陪你继续看。",
-    "mood": "sleepy",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-01",
-    "trigger": "recall",
-    "text": "找到我啦。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 20000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-02",
-    "trigger": "recall",
-    "text": "我又回来陪你啦。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 20000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-03",
-    "trigger": "recall",
-    "text": "爪印一按，我就出现。",
-    "mood": "playful",
-    "weight": 2,
-    "minIntervalMs": 20000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-04",
-    "trigger": "recall",
-    "text": "谢谢你把我叫回来。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 20000,
     "paths": ["*"]
   },
   {
     "id": "idle-01",
     "trigger": "idle",
-    "text": "慢慢来，也是在前进。",
-    "mood": "relaxed",
-    "weight": 3,
+    "text": "有两样东西，我们愈经常愈持久地加以沉思，它们就越使心灵充满日久弥新、有增无减的惊奇和敬畏：我头顶上的星空和我心中的道德律。",
+    "mood": "curious",
+    "weight": 1,
     "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
     "id": "idle-02",
     "trigger": "idle",
-    "text": "方向比速度更重要。",
+    "text": "认识你自己，是一切智慧的开始。",
     "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 75000,
+    "weight": 1,
+    "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
     "id": "idle-03",
     "trigger": "idle",
-    "text": "累了就看看远处吧。",
+    "text": "我们不是为了抵达终点而旅行，而是在旅途中成为自己。",
     "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 75000,
+    "weight": 1,
+    "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
     "id": "idle-04",
     "trigger": "idle",
-    "text": "今天也给自己一点耐心。",
+    "text": "不要害怕走得慢，只要不要停下脚步。",
     "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["*"]
-  },
-  {
-    "id": "idle-07",
-    "trigger": "idle",
-    "text": "对于一个温和而懦弱的灵魂，最大的不幸莫过于体验到了一次最大的幸福。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 120000,
-    "paths": ["*"]
-  },
-  {
-    "id": "page-blog-01",
-    "trigger": "page-blog",
-    "text": "慢慢读，我陪你想一想。",
-    "mood": "relaxed",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-blog-02",
-    "trigger": "page-blog",
-    "text": "这一段值得再看一遍。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-blog-03",
-    "trigger": "page-blog",
-    "text": "灵感常藏在细节里。",
-    "mood": "curious",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-blog-04",
-    "trigger": "page-blog",
-    "text": "读到这里，辛苦啦。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-projects-01",
-    "trigger": "page-projects",
-    "text": "动手做出来才算数。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
-  },
-  {
-    "id": "page-projects-02",
-    "trigger": "page-projects",
-    "text": "这个项目有点意思。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
-  },
-  {
-    "id": "page-projects-03",
-    "trigger": "page-projects",
-    "text": "小进展也值得庆祝。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
-  },
-  {
-    "id": "page-projects-04",
-    "trigger": "page-projects",
-    "text": "试试看，答案会慢慢出现。",
-    "mood": "curious",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
-  },
-  {
-    "id": "page-about-01",
-    "trigger": "page-about",
-    "text": "原来你也想了解他。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
-  },
-  {
-    "id": "page-about-02",
-    "trigger": "page-about",
-    "text": "故事要从好奇心说起。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
-  },
-  {
-    "id": "page-about-03",
-    "trigger": "page-about",
-    "text": "很高兴和你在这里见面。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
-  },
-  {
-    "id": "page-about-04",
-    "trigger": "page-about",
-    "text": "多认识一点，也多一份理解。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
-  },
-  {
-    "id": "tab-return-05",
-    "trigger": "tab-return",
-    "text": "又见面啦，我在这儿。",
-    "mood": "happy",
-    "weight": 3,
+    "weight": 1,
     "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-06",
-    "trigger": "tab-return",
-    "text": "欢迎回来，慢慢继续。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-05",
-    "trigger": "tab-return-long",
-    "text": "等了好一会儿，先伸个懒腰吧。",
-    "mood": "relaxed",
-    "weight": 3,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "tab-return-long-06",
-    "trigger": "tab-return-long",
-    "text": "忙完了吗？我给你留着位置。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 60000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-05",
-    "trigger": "pet-head",
-    "text": "再摸一下也可以。",
-    "mood": "relaxed",
-    "weight": 3,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-head-06",
-    "trigger": "pet-head",
-    "text": "呼噜声要藏不住啦。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 12000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-05",
-    "trigger": "pet-nose",
-    "text": "鼻尖收到一颗小问号。",
-    "mood": "surprised",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "pet-nose-06",
-    "trigger": "pet-nose",
-    "text": "轻一点，我闻到你啦。",
-    "mood": "curious",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-05",
-    "trigger": "rapid-click",
-    "text": "慢慢来，我只有四只爪。",
-    "mood": "annoyed",
-    "weight": 3,
-    "minIntervalMs": 30000,
-    "paths": ["*"]
-  },
-  {
-    "id": "rapid-click-06",
-    "trigger": "rapid-click",
-    "text": "先让我缓一小会儿。",
-    "mood": "sleepy",
-    "weight": 2,
-    "minIntervalMs": 30000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-start-05",
-    "trigger": "toy-start",
-    "text": "尾巴已经进入追踪模式。",
-    "mood": "playful",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-start-06",
-    "trigger": "toy-start",
-    "text": "看准啦，我要出爪了。",
-    "mood": "curious",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-end-05",
-    "trigger": "toy-end",
-    "text": "这回算你赢一点点。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "toy-end-06",
-    "trigger": "toy-end",
-    "text": "玩累啦，陪我坐一会儿。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 15000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-05",
-    "trigger": "recall",
-    "text": "爪印一亮，我就来啦。",
-    "mood": "happy",
-    "weight": 3,
-    "minIntervalMs": 20000,
-    "paths": ["*"]
-  },
-  {
-    "id": "recall-06",
-    "trigger": "recall",
-    "text": "我没有走远，只是躲了一下。",
-    "mood": "playful",
-    "weight": 2,
-    "minIntervalMs": 20000,
     "paths": ["*"]
   },
   {
     "id": "idle-05",
     "trigger": "idle",
-    "text": "页面安静得能听见呼噜。",
-    "mood": "relaxed",
-    "weight": 3,
-    "minIntervalMs": 75000,
+    "text": "昨天的自己无法改变，但今天的自己可以选择方向。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
     "id": "idle-06",
     "trigger": "idle",
-    "text": "不用赶，我陪你慢慢看。",
-    "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
+    "text": "种一棵树最好的时间是十年前，其次是现在。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
     "paths": ["*"]
   },
   {
-    "id": "page-blog-05",
-    "trigger": "page-blog",
-    "text": "这一段值得多停一会儿。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-blog-06",
-    "trigger": "page-blog",
-    "text": "读到哪儿了？我不催你。",
-    "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/blog", "/blog/*"]
-  },
-  {
-    "id": "page-projects-05",
-    "trigger": "page-projects",
-    "text": "把想法做出来最有意思。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
-  },
-  {
-    "id": "page-projects-06",
-    "trigger": "page-projects",
-    "text": "每一次迭代都算数。",
+    "id": "idle-07",
+    "trigger": "idle",
+    "text": "每一次努力，都在塑造未来的自己。",
     "mood": "happy",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/projects", "/projects/*"]
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
   },
   {
-    "id": "page-about-05",
-    "trigger": "page-about",
-    "text": "认识一个人，也是在读一段故事。",
-    "mood": "curious",
-    "weight": 3,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
-  },
-  {
-    "id": "page-about-06",
-    "trigger": "page-about",
-    "text": "这里藏着一些来路和愿望。",
+    "id": "idle-08",
+    "trigger": "idle",
+    "text": "一个人只有在独处时，才能真正听见自己的声音。",
     "mood": "relaxed",
-    "weight": 2,
-    "minIntervalMs": 90000,
-    "paths": ["/about", "/about/*"]
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-09",
+    "trigger": "idle",
+    "text": "孤独不是没有陪伴，而是没有与自己相处的能力。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-10",
+    "trigger": "idle",
+    "text": "内心丰盈的人，即使独处，也拥有整个世界。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-11",
+    "trigger": "idle",
+    "text": "安静下来，才能听见生命真正想告诉你的事情。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-12",
+    "trigger": "idle",
+    "text": "不要害怕黑夜，因为星光只在黑暗中显现。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-13",
+    "trigger": "idle",
+    "text": "仰望星空的人，也应该脚踏实地。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-14",
+    "trigger": "idle",
+    "text": "我们都是宇宙中短暂出现的奇迹。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-15",
+    "trigger": "idle",
+    "text": "宇宙浩瀚，而我们仍然愿意追问。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-16",
+    "trigger": "idle",
+    "text": "保持好奇，是对世界最大的尊重。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-17",
+    "trigger": "idle",
+    "text": "今天也辛苦啦，记得给自己一点温柔。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-18",
+    "trigger": "idle",
+    "text": "别急呀，小猫陪你慢慢走。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-19",
+    "trigger": "idle",
+    "text": "世界很大，但此刻这一刻，也值得被珍惜。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-20",
+    "trigger": "idle",
+    "text": "如果觉得迷茫，就先休息一下，再继续寻找方向。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-21",
+    "trigger": "idle",
+    "text": "愿你永远保持好奇，像第一次看见世界的小猫一样。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-22",
+    "trigger": "idle",
+    "text": "小猫想知道：如果没有人看见花开，花还会不会美丽？",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-23",
+    "trigger": "idle",
+    "text": "宇宙这么大，能遇见此刻的你，也是一件很神奇的事。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-24",
+    "trigger": "idle",
+    "text": "星星不知道自己有多亮，但它依然照亮夜晚。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-25",
+    "trigger": "idle",
+    "text": "人生像猫咪散步，不一定有目的地，但每一步都有意义。",
+    "mood": "playful",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-26",
+    "trigger": "idle",
+    "text": "世界不会总给答案，但会给愿意思考的人更多风景。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-27",
+    "trigger": "idle",
+    "text": "小猫觉得，思考本身就是一种浪漫。",
+    "mood": "curious",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-28",
+    "trigger": "idle",
+    "text": "我们都是时间里的小小旅人，要认真看看沿途。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-29",
+    "trigger": "idle",
+    "text": "生命很短，所以喜欢的事情要早点去做。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-30",
+    "trigger": "idle",
+    "text": "如果人生是一场旅行，小猫希望你不要忘记欣赏风景。",
+    "mood": "happy",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
+  },
+  {
+    "id": "idle-31",
+    "trigger": "idle",
+    "text": "真正重要的东西，往往需要安静下来才能发现。",
+    "mood": "relaxed",
+    "weight": 1,
+    "minIntervalMs": 60000,
+    "paths": ["*"]
   }
 ]

@@ -72,8 +72,8 @@ const petStorage = await readFile(petStoragePath, 'utf8');
 const petManifestPath = path.join(projectRoot, 'public', 'pet', 'cat-v1', 'manifest.json');
 const petManifest = JSON.parse(await readFile(petManifestPath, 'utf8'));
 const expectedTriggers = [
+  'first-visit',
   'tab-return',
-  'tab-return-long',
   'pet-head',
   'pet-nose',
   'rapid-click',
@@ -130,14 +130,27 @@ if (!Array.isArray(lines)) {
     }
   }
 
-  for (const trigger of expectedTriggers) {
-    const count = lines.filter((line) => line?.trigger === trigger).length;
-    if (count < 4) dialogueErrors.push(`Trigger ${trigger} has only ${count} dialogue lines.`);
+  const introductionLines = lines.filter((line) => line?.trigger === 'first-visit');
+  if (introductionLines.length !== 1) {
+    dialogueErrors.push('The first-visit trigger must contain exactly one introduction line.');
+  }
+  const interactiveTriggers = new Set([
+    'tab-return',
+    'pet-head',
+    'pet-nose',
+    'rapid-click',
+    'toy-start',
+    'toy-end',
+    'recall',
+  ]);
+  const interactiveCount = lines.filter((line) => interactiveTriggers.has(line?.trigger)).length;
+  if (interactiveCount > 10) {
+    dialogueErrors.push(`Interactive dialogue must contain at most 10 lines; found ${interactiveCount}.`);
   }
 }
 
 const requiredQuote =
-  '对于一个温和而懦弱的灵魂，最大的不幸莫过于体验到了一次最大的幸福。';
+  '你好，我叫长毛，是一只长毛小狸花。';
 if (!Array.isArray(lines) || !lines.some((line) => line?.text === requiredQuote)) {
   dialogueErrors.push('The required quoted idle line is missing.');
 }

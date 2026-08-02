@@ -1,6 +1,6 @@
 // Versioned separately so this release starts visible even when v1 stored "hidden".
 const HIDDEN_KEY = 'cat-companion:v2:hidden';
-const SESSION_SEEN_KEY = 'cat-companion:v1:session-seen';
+const INTRODUCTION_SEEN_KEY = 'cat-companion:v1:introduction-seen';
 const DIALOGUE_HISTORY_KEY = 'cat-companion:v1:dialogue-history';
 const RETURN_GREETING_KEY = 'cat-companion:v1:last-return-greeting';
 const POSITION_KEY = 'cat-companion:v1:position';
@@ -51,13 +51,13 @@ export const writeHiddenPreference = (hidden: boolean): void => {
   }
 };
 
-export const markSessionSeen = (): boolean => {
-  const storage = getStorage('session');
+export const markIntroductionSeen = (): boolean => {
+  const storage = getStorage('local');
   if (!storage) return false;
 
-  const wasSeen = readStorageValue('session', SESSION_SEEN_KEY) === 'true';
+  const wasSeen = readStorageValue('local', INTRODUCTION_SEEN_KEY) === 'true';
   try {
-    storage.setItem(SESSION_SEEN_KEY, 'true');
+    storage.setItem(INTRODUCTION_SEEN_KEY, 'true');
   } catch {
     return wasSeen;
   }

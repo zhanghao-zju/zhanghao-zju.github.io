@@ -7,6 +7,7 @@ import {
   readLastReturnGreetingAt,
   readPetPosition,
   readPetSizeMode,
+  markIntroductionSeen,
   writeHiddenPreference,
   writeLastReturnGreetingAt,
   writePetPosition,
@@ -16,7 +17,6 @@ import type { PetSizeMode } from './storage';
 import type { PetLine, PetMood, PetState, PetTrigger, SpeechRequest, StateLease } from './types';
 
 const RETURN_MIN_AWAY_MS = 8_000;
-const RETURN_LONG_AWAY_MS = 10 * 60_000;
 const RETURN_COOLDOWN_MS = 60_000;
 const TOY_DURATION_MS = 18_000;
 const RAPID_CLICK_WINDOW_MS = 1_500;
@@ -198,6 +198,9 @@ class CatCompanionController {
     this.#root.dataset.reducedMotion = String(this.#reducedMotionQuery.matches);
     this.#root.dataset.mouth = 'closed';
     this.#bubble.hidden = true;
+    if (!this.#hidden && !markIntroductionSeen()) {
+      this.#requestSpeech({ trigger: 'first-visit', priority: 100, announce: true });
+    }
     this.#measureSafeArea();
     requestAnimationFrame(() => this.#restorePosition());
     void this.#loadAssetRenderer();
@@ -692,7 +695,7 @@ class CatCompanionController {
     const isNose = trigger === 'pet-nose';
     this.#react(isNose ? 'nose' : 'head', isNose ? 'surprised' : 'happy');
     if (!isNose) this.#createParticles('heart');
-    this.#requestSpeech({ trigger, priority: 80, announce: true });
+    this.#requestSpeech({ trigger: 'pet-head', priority: 80, announce: true });
   }
 
   #react(kind: 'head' | 'nose' | 'rapid' | 'paw' | 'return', mood: PetMood): void {
@@ -836,10 +839,9 @@ class CatCompanionController {
 
     this.#lastReturnGreetingAt = now;
     writeLastReturnGreetingAt(now);
-    const trigger: PetTrigger = awayFor >= RETURN_LONG_AWAY_MS ? 'tab-return-long' : 'tab-return';
     this.#gaze.lookCenter();
     this.#react('return', 'happy');
-    this.#requestSpeech({ trigger, priority: 88, announce: true });
+    this.#requestSpeech({ trigger: 'tab-return', priority: 88, announce: true });
   };
 
   #onPageHide = (event: PageTransitionEvent): void => {
@@ -1119,11 +1121,6 @@ class CatCompanionController {
   }
 
   #idleTriggerForPath(): PetTrigger {
-    if (this.#pathname === '/blog' || this.#pathname.startsWith('/blog/')) return 'page-blog';
-    if (this.#pathname === '/projects' || this.#pathname.startsWith('/projects/')) {
-      return 'page-projects';
-    }
-    if (this.#pathname === '/about' || this.#pathname.startsWith('/about/')) return 'page-about';
     return 'idle';
   }
 

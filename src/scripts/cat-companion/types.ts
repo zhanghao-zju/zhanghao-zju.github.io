@@ -18,8 +18,8 @@ export type PetState =
   | 'hidden';
 
 export type PetTrigger =
+  | 'first-visit'
   | 'tab-return'
-  | 'tab-return-long'
   | 'pet-head'
   | 'pet-nose'
   | 'rapid-click'

@@ -41,15 +41,16 @@ export class DialoguePicker {
     });
 
     const fresh = eligible.filter((line) => !this.#recentIds.includes(line.id));
-    if (!fresh.length) return null;
+    const candidates = fresh.length ? fresh : eligible;
+    if (!candidates.length) return null;
 
-    const totalWeight = fresh.reduce((sum, line) => sum + Math.max(1, line.weight), 0);
+    const totalWeight = candidates.reduce((sum, line) => sum + Math.max(1, line.weight), 0);
     let cursor = Math.random() * totalWeight;
     const selected =
-      fresh.find((line) => {
+      candidates.find((line) => {
         cursor -= Math.max(1, line.weight);
         return cursor <= 0;
-      }) ?? fresh[0];
+      }) ?? candidates[0];
 
     this.#recentIds.unshift(selected.id);
     this.#recentIds = this.#recentIds.slice(0, RECENT_LIMIT);
