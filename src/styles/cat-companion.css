@@ -836,10 +836,6 @@
   translate: 0 -2px;
 }
 
-[data-cat-companion][data-mood="curious"] {
-  --pet-head-tilt: 3deg;
-}
-
 [data-cat-companion][data-mood="surprised"] [data-pet-part^="eye-"] {
   transform: scale(1.08);
 }
@@ -848,27 +844,8 @@
   width: 5px;
 }
 
-[data-cat-companion][data-mood="happy"] [data-pet-part^="eyelid-"],
-[data-cat-companion][data-mood="relaxed"] [data-pet-part^="eyelid-"] {
-  animation: none;
-  transform: scaleY(0.2);
-}
-
-[data-cat-companion][data-mood="relaxed"] [data-pet-part^="eyelid-"] {
-  transform: scaleY(0.42);
-}
-
 [data-cat-companion][data-mood="playful"] [data-pet-part^="pupil-"] {
   width: 11px;
-}
-
-[data-cat-companion][data-mood="annoyed"] [data-pet-part^="eyelid-"] {
-  animation: none;
-  transform: scaleY(0.48) rotate(4deg);
-}
-
-[data-cat-companion][data-mood="annoyed"] [data-pet-part="eyelid-right"] {
-  transform: scaleY(0.48) rotate(-4deg);
 }
 
 [data-cat-companion][data-state="playing"] [data-pet-part="tail"] {
@@ -913,17 +890,6 @@
 
 [data-cat-companion][data-mood="annoyed"] [data-asset-part="ear-right"] {
   transform: rotate(5deg);
-}
-
-[data-cat-companion][data-state="sleepy"] [data-pet-part^="eyelid-"],
-[data-cat-companion][data-mood="sleepy"] [data-pet-part^="eyelid-"] {
-  animation: none;
-  transform: scaleY(0.7);
-}
-
-[data-cat-companion]:is([data-mood="happy"], [data-mood="relaxed"], [data-mood="sleepy"], [data-mood="annoyed"])
-  [data-asset-part^="eyelid-half-"] {
-  opacity: 1;
 }
 
 [data-cat-companion][data-mood="surprised"] [data-asset-part^="eye-base-"] {
@@ -1572,9 +1538,9 @@
 }
 
 @keyframes cat-companion-head-idle {
-  0%, 100% { transform: translate(0, 0) rotate(-0.65deg); }
-  43% { transform: translate(0.8px, -1px) rotate(0.9deg); }
-  72% { transform: translate(-0.5px, -0.3px) rotate(0.2deg); }
+  0%, 100% { transform: translate(0, 0) rotate(-0.15deg); }
+  43% { transform: translate(0.6px, -0.8px) rotate(0.2deg); }
+  72% { transform: translate(-0.4px, -0.2px) rotate(0); }
 }
 
 @keyframes cat-companion-hop-shell {
@@ -1584,18 +1550,18 @@
 
 @keyframes cat-companion-head-pat-shell {
   0%, 100% { transform: translateY(0) rotate(0); }
-  48% { transform: translateY(4px) rotate(-2deg) scale(0.985); }
+  48% { transform: translateY(4px) rotate(-1deg) scale(0.985); }
 }
 
 @keyframes cat-companion-nose-recoil-shell {
   0%, 100% { transform: translateY(0) rotate(0); }
-  42% { transform: translateY(-6px) rotate(1deg) scale(0.97); }
+  42% { transform: translateY(-6px) rotate(0.5deg) scale(0.97); }
 }
 
 @keyframes cat-companion-head-shake-shell {
   0%, 100% { transform: translateX(0) rotate(0); }
-  24%, 62% { transform: translateX(-4px) rotate(-3deg); }
-  43%, 81% { transform: translateX(4px) rotate(3deg); }
+  24%, 62% { transform: translateX(-4px) rotate(-1.5deg); }
+  43%, 81% { transform: translateX(4px) rotate(1.5deg); }
 }
 
 @keyframes cat-companion-body-pat-follow {
