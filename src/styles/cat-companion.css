@@ -848,6 +848,10 @@
   width: 11px;
 }
 
+[data-cat-companion][data-mood="curious"] {
+  --pet-head-tilt: 3deg;
+}
+
 [data-cat-companion][data-state="playing"] [data-pet-part="tail"] {
   animation-duration: 1.15s;
 }
@@ -1538,9 +1542,9 @@
 }
 
 @keyframes cat-companion-head-idle {
-  0%, 100% { transform: translate(0, 0) rotate(-0.15deg); }
-  43% { transform: translate(0.6px, -0.8px) rotate(0.2deg); }
-  72% { transform: translate(-0.4px, -0.2px) rotate(0); }
+  0%, 100% { transform: translate(0, 0) rotate(-0.65deg); }
+  43% { transform: translate(0.8px, -1px) rotate(0.9deg); }
+  72% { transform: translate(-0.5px, -0.3px) rotate(0.2deg); }
 }
 
 @keyframes cat-companion-hop-shell {
@@ -1550,18 +1554,18 @@
 
 @keyframes cat-companion-head-pat-shell {
   0%, 100% { transform: translateY(0) rotate(0); }
-  48% { transform: translateY(4px) rotate(-1deg) scale(0.985); }
+  48% { transform: translateY(4px) rotate(-2deg) scale(0.985); }
 }
 
 @keyframes cat-companion-nose-recoil-shell {
   0%, 100% { transform: translateY(0) rotate(0); }
-  42% { transform: translateY(-6px) rotate(0.5deg) scale(0.97); }
+  42% { transform: translateY(-6px) rotate(1deg) scale(0.97); }
 }
 
 @keyframes cat-companion-head-shake-shell {
   0%, 100% { transform: translateX(0) rotate(0); }
-  24%, 62% { transform: translateX(-4px) rotate(-1.5deg); }
-  43%, 81% { transform: translateX(4px) rotate(1.5deg); }
+  24%, 62% { transform: translateX(-4px) rotate(-3deg); }
+  43%, 81% { transform: translateX(4px) rotate(3deg); }
 }
 
 @keyframes cat-companion-body-pat-follow {
