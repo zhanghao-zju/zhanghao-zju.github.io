@@ -22,8 +22,7 @@ const TOY_DURATION_MS = 18_000;
 const RAPID_CLICK_WINDOW_MS = 1_500;
 const RAPID_CLICK_LIMIT = 4;
 const RAPID_CLICK_COOLDOWN_MS = 4_000;
-const IDLE_MIN_MS = 55_000;
-const IDLE_JITTER_MS = 35_000;
+const IDLE_INTERVAL_MS = 15_000;
 const ARTICLE_TOC_OVERLAY_QUERY = '(max-width: 1050px)';
 const NORMAL_CHARACTER_WIDTH = 172;
 const NORMAL_CHARACTER_HEIGHT = 258;
@@ -1049,13 +1048,12 @@ class CatCompanionController {
   #scheduleIdleLine(): void {
     window.clearTimeout(this.#idleTimer);
     if (this.#hidden || document.hidden) return;
-    const delay = IDLE_MIN_MS + Math.random() * IDLE_JITTER_MS;
     this.#idleTimer = window.setTimeout(() => {
       if (!this.#shouldSuppressIdleLine()) {
         this.#requestSpeech({ trigger: this.#idleTriggerForPath(), priority: 25, announce: false });
       }
       this.#scheduleIdleLine();
-    }, delay);
+    }, IDLE_INTERVAL_MS);
   }
 
   #scheduleBlink(): void {
