@@ -943,10 +943,7 @@ class CatCompanionController {
     this.#root.dataset.speaking = 'true';
     this.#root.dataset.bubbleVisible = 'true';
     this.#root.dataset.mood = line.mood;
-    this.#root.dataset.mouth =
-      line.mood === 'surprised' || line.mood === 'playful' || line.mood === 'happy'
-        ? 'open'
-        : 'small';
+    this.#root.dataset.mouth = 'closed';
     this.#bubbleText.textContent = line.text;
     this.#bubble.hidden = false;
     this.#scheduleBubblePosition();
