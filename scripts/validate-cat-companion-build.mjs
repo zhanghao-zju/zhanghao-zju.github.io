@@ -65,6 +65,8 @@ const petStylesPath = path.join(projectRoot, 'src', 'styles', 'cat-companion.css
 const petStyles = await readFile(petStylesPath, 'utf8');
 const petControllerPath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'controller.ts');
 const petController = await readFile(petControllerPath, 'utf8');
+const petDialoguePath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'dialogue.ts');
+const petDialogue = await readFile(petDialoguePath, 'utf8');
 const petGazePath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'gaze.ts');
 const petGaze = await readFile(petGazePath, 'utf8');
 const petStoragePath = path.join(projectRoot, 'src', 'scripts', 'cat-companion', 'storage.ts');
@@ -178,6 +180,8 @@ if (petStyles.includes('--pet-asset-tablet-') || petStyles.includes('--pet-asset
 
 const integrationContracts = [
   [petController, 'const MAX_GIANT_SCALE = 3;', 'Giant mode must cap desktop scaling at 3x.'],
+  [petController, 'const SPEECH_DISPLAY_MS = 5_000;', 'Every dialogue line must remain visible for five seconds.'],
+  [petController, 'this.#bubbleText.textContent = line.text;', 'Dialogue text must appear in full without typewriter loading.'],
   [petController, 'const GIANT_MOTION_GUTTER = 12;', 'Giant contain sizing must reserve room for ambient motion.'],
   [petController, 'this.#root.dataset.sizeMode = this.#sizeMode;', 'Giant mode must expose its data state.'],
   [petController, "giant ? '退出巨大模式' : '进入巨大模式'", 'The giant toggle label must update dynamically.'],
@@ -203,6 +207,7 @@ const integrationContracts = [
   [petStyles, 'cat-companion-body-pat-follow', 'Head pat reactions must coordinate the body.'],
   [petStyles, 'cat-companion-body-nose-follow', 'Nose reactions must coordinate the body.'],
   [petStyles, 'cat-companion-body-rapid-follow', 'Rapid reactions must coordinate the body.'],
+  [petDialogue, 'const oldestShownAt = Math.min(', 'Dialogue selection must prefer the least recently shown lines.'],
 ];
 for (const [source, snippet, message] of integrationContracts) {
   if (!source.includes(snippet)) dialogueErrors.push(message);

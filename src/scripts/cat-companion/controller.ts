@@ -23,6 +23,7 @@ const RAPID_CLICK_WINDOW_MS = 1_500;
 const RAPID_CLICK_LIMIT = 4;
 const RAPID_CLICK_COOLDOWN_MS = 4_000;
 const IDLE_INTERVAL_MS = 15_000;
+const SPEECH_DISPLAY_MS = 5_000;
 const ARTICLE_TOC_OVERLAY_QUERY = '(max-width: 1050px)';
 const NORMAL_CHARACTER_WIDTH = 172;
 const NORMAL_CHARACTER_HEIGHT = 258;
@@ -942,39 +943,18 @@ class CatCompanionController {
     this.#root.dataset.speaking = 'true';
     this.#root.dataset.bubbleVisible = 'true';
     this.#root.dataset.mood = line.mood;
-    this.#root.dataset.mouth = 'closed';
-    this.#bubbleText.textContent = '';
+    this.#root.dataset.mouth =
+      line.mood === 'surprised' || line.mood === 'playful' || line.mood === 'happy'
+        ? 'open'
+        : 'small';
+    this.#bubbleText.textContent = line.text;
     this.#bubble.hidden = false;
     this.#scheduleBubblePosition();
     if (request.announce) this.#liveRegion.textContent = line.text;
 
     try {
-      if (this.#reducedMotionQuery.matches) {
-        this.#bubbleText.textContent = line.text;
-        this.#root.dataset.mouth = 'closed';
-      } else {
-        this.#root.dataset.mouth =
-          line.mood === 'surprised' || line.mood === 'playful' || line.mood === 'happy'
-            ? 'open'
-            : 'small';
-        const characters = Array.from(line.text);
-        for (const character of characters) {
-          if (this.#reducedMotionQuery.matches) {
-            this.#bubbleText.textContent = line.text;
-            this.#root.dataset.mouth = 'closed';
-            break;
-          }
-          this.#bubbleText.textContent += character;
-          this.#scheduleBubblePosition();
-          await wait(34, signal);
-        }
-        this.#root.dataset.mouth = 'closed';
-        this.#scheduleBubblePosition();
-      }
-
-      await wait(Math.max(1_150, Math.min(2_400, line.text.length * 105)), signal);
+      await wait(SPEECH_DISPLAY_MS, signal);
       this.#root.dataset.mouth = 'closed';
-      await wait(this.#reducedMotionQuery.matches ? 0 : 260, signal);
     } catch {
       // Hiding or navigating intentionally cancels the current line.
     } finally {

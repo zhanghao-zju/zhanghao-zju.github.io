@@ -40,9 +40,14 @@ export class DialoguePicker {
       );
     });
 
-    const fresh = eligible.filter((line) => !this.#recentIds.includes(line.id));
-    const candidates = fresh.length ? fresh : eligible;
-    if (!candidates.length) return null;
+    if (!eligible.length) return null;
+
+    const oldestShownAt = Math.min(
+      ...eligible.map((line) => this.#lastShownById.get(line.id) ?? 0),
+    );
+    const candidates = eligible.filter(
+      (line) => (this.#lastShownById.get(line.id) ?? 0) === oldestShownAt,
+    );
 
     const totalWeight = candidates.reduce((sum, line) => sum + Math.max(1, line.weight), 0);
     let cursor = Math.random() * totalWeight;
